@@ -1,29 +1,39 @@
 ---
 // src/components/TranslateBox.astro
+import AppHeader from "./AppHeader.astro";
+import EditorialFeatures from "./EditorialFeatures.astro";
+import FlowVisual from "./FlowVisual.astro";
+import ResultProgress from "./ResultProgress.astro";
 ---
 
 <div class="app-wrapper">
-  <header class="app-header">
-    <div class="logo-mark">✦</div>
-    <h1 class="app-title">Phrase Paraphraser</h1>
-    <p class="app-subtitle">
-      Teks kamu melakukan perjalanan: <span class="lang-chain">ID → NL → EN → ID</span>
-    </p>
-  </header>
+  <AppHeader />
+
+  <EditorialFeatures />
+
+  <FlowVisual />
 
   <div class="card-main">
     <div class="input-section">
-      <div class="section-label">
-        <span class="flag">🇮🇩</span>
-        <span>Teks Indonesia</span>
+      <div
+        class="section-label"
+        style="display:flex;justify-content:space-between;align-items:center;"
+      >
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span class="flag">🇮🇩</span>
+          <span>Teks Indonesia</span>
+        </div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <button id="pasteBtn" class="action-btn">Tempel</button>
+          <button id="clearBtn" class="action-btn ghost">Bersihkan</button>
+        </div>
       </div>
       <textarea
         id="inputText"
         placeholder="Tulis teksmu di sini..."
-        maxlength="500"
-      ></textarea>
+        maxlength="3000"></textarea>
       <div class="char-row">
-        <span id="charCount" class="char-count">0 / 500</span>
+        <span id="charCount" class="char-count">0 / 3000</span>
       </div>
     </div>
 
@@ -34,312 +44,415 @@
 
     <div id="errorBox" class="error-box hidden"></div>
 
-    <div id="results" class="results hidden">
-      <div class="progress-chain">
-        <div class="progress-step" id="step-0">
-          <div class="progress-badge active" id="badge-0">
-            <span class="flag">🇮🇩</span>
-          </div>
-          <div class="progress-content">
-            <div class="progress-title">Indonesian (Original)</div>
-            <p class="progress-text" id="progress-text-0"></p>
-          </div>
-        </div>
-
-        <div class="progress-arrow">↓</div>
-
-        <div class="progress-step" id="step-1">
-          <div class="progress-badge" id="badge-1">
-            <span class="flag">🇳🇱</span>
-          </div>
-          <div class="progress-content">
-            <div class="progress-title">Dutch
-              <span class="progress-status" id="status-1"></span>
-            </div>
-            <p class="progress-text" id="progress-text-1"></p>
-          </div>
-        </div>
-
-        <div class="progress-arrow">↓</div>
-
-        <div class="progress-step" id="step-2">
-          <div class="progress-badge" id="badge-2">
-            <span class="flag">🇬🇧</span>
-          </div>
-          <div class="progress-content">
-            <div class="progress-title">English
-              <span class="progress-status" id="status-2"></span>
-            </div>
-            <p class="progress-text" id="progress-text-2"></p>
-          </div>
-        </div>
-
-        <div class="progress-arrow">↓</div>
-
-        <div class="progress-step" id="step-3">
-          <div class="progress-badge" id="badge-3">
-            <span class="flag">🇮🇩</span>
-          </div>
-          <div class="progress-content">
-            <div class="progress-title">Indonesian (Paraphrased)
-              <span class="progress-status" id="status-3"></span>
-            </div>
-            <p class="progress-text" id="progress-text-3"></p>
-          </div>
-        </div>
-      </div>
-
-      <div class="result-actions">
-        <button id="copyBtn" class="btn-copy">Salin Hasil Akhir</button>
-      </div>
-    </div>
+    <ResultProgress />
   </div>
 
+  <button id="goUpBtn" class="btn-go-up hidden" aria-label="Kembali ke atas"
+    >↑</button
+  >
+
   <footer class="app-footer">
-    Powered by MyMemory API · Astro · Vercel
+    © 2026 Phrase Paraphraser · Powered by Back-Translation ·
+    <a
+      href="https://www.instagram.com/kandar.lubis31"
+      target="_blank"
+      rel="noopener">@kandar.lubis31</a
+    >
+    · <a href="https://github.com/kandarlubis31" target="_blank" rel="noopener"
+      >GitHub</a
+    >
+    · <a href="https://www.paklubis.my.id" target="_blank" rel="noopener"
+      >paklubis.my.id</a
+    >
   </footer>
 </div>
 
 <script>
-  const MYMEMORY = 'https://api.mymemory.translated.net/get';
+  const WORKER_URL = "https://phrase-proxy.kandarlubis31.workers.dev";
   let isProcessing = false;
 
-  async function translate(text: string, src: string, tgt: string): Promise<string> {
+  async function translate(
+    text: string,
+    src: string,
+    tgt: string,
+  ): Promise<string> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10_000);
+    const timer = setTimeout(() => controller.abort(), 12_000);
     try {
-      const res = await fetch(
-        `${MYMEMORY}?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`,
-        { signal: controller.signal }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      
-      if (data.responseStatus === 200 || data.responseStatus === 206) {
-        return data.responseData.translatedText || text;
-      }
-      
-      if (data.responseStatus === 429 || data.responseStatus === 403) {
-         throw new Error('Limit kuota terjemahan gratis hari ini tercapai.');
-      }
+      const res = await fetch(`${WORKER_URL}?t=${Date.now()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, src, tgt }),
+        signal: controller.signal,
+      });
 
-      throw new Error(`Status ${data.responseStatus}: ${data.responseDetails || 'Unknown'}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      return data.result;
     } finally {
       clearTimeout(timer);
     }
   }
 
-  // Karena ini di dalam komponen Astro, kita pastikan DOM sudah ready
-  document.addEventListener('DOMContentLoaded', () => {
-    const textarea    = document.getElementById('inputText') as HTMLTextAreaElement;
-    const btn         = document.getElementById('paraphraseBtn') as HTMLButtonElement;
-    const btnLabel    = document.getElementById('btnLabel') as HTMLSpanElement;
-    const btnSpinner  = document.getElementById('btnSpinner') as HTMLSpanElement;
-    const charCount   = document.getElementById('charCount') as HTMLSpanElement;
-    const errorBox    = document.getElementById('errorBox') as HTMLDivElement;
-    const results     = document.getElementById('results') as HTMLDivElement;
-    const copyBtn     = document.getElementById('copyBtn') as HTMLButtonElement;
+  function initParaphraser() {
+    const textarea = document.getElementById(
+      "inputText",
+    ) as HTMLTextAreaElement;
+    const btn = document.getElementById("paraphraseBtn") as HTMLButtonElement;
+    const btnLabel = document.getElementById("btnLabel") as HTMLSpanElement;
+    const btnSpinner = document.getElementById("btnSpinner") as HTMLSpanElement;
+    const charCount = document.getElementById("charCount") as HTMLSpanElement;
+    const errorBox = document.getElementById("errorBox") as HTMLDivElement;
+    const results = document.getElementById("results") as HTMLDivElement;
+    const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement;
+    const dropdown = document.querySelector(
+      ".process-dropdown",
+    ) as HTMLDetailsElement;
+
+    const pasteBtn = document.getElementById("pasteBtn") as HTMLButtonElement;
+    const clearBtn = document.getElementById("clearBtn") as HTMLButtonElement;
+    const goUpBtn = document.getElementById("goUpBtn") as HTMLButtonElement;
+
+    const nodeNl = document.querySelector(".node-nl");
+    const nodeEn = document.querySelector(".node-en");
+    const nodeFinal = document.querySelector(".node-final");
 
     if (!textarea || !btn) return;
 
-    textarea.addEventListener('input', () => {
-      charCount.textContent = `${textarea.value.length} / 500`;
-    });
+    if (results) results.style.setProperty("display", "none", "important");
 
-    function setLoading(on: boolean) {
-      isProcessing = on;
-      btn.disabled = on;
-      btnLabel.classList.toggle('hidden', on);
-      btnSpinner.classList.toggle('hidden', !on);
+    const savedInput = localStorage.getItem("paraphrase_input");
+    const savedOutput = localStorage.getItem("paraphrase_output");
+    const savedNl = localStorage.getItem("paraphrase_nl");
+    const savedEn = localStorage.getItem("paraphrase_en");
+
+    if (savedInput) {
+      textarea.value = savedInput;
+      handleCharCount();
     }
 
-    function showError(msg: string) {
-      errorBox.textContent = msg;
-      errorBox.classList.remove('hidden');
-      results.classList.add('hidden');
-    }
+    if (savedOutput && results) {
+      results.style.setProperty("display", "flex", "important");
 
-    function hideError() {
-      errorBox.classList.add('hidden');
-    }
+      const t0 = document.getElementById("progress-text-0");
+      const t1 = document.getElementById("progress-text-1");
+      const t2 = document.getElementById("progress-text-2");
+      const t3 = document.getElementById("progress-text-3");
+      const s3 = document.getElementById("status-3");
 
-    function resetBadges() {
-      [1, 2, 3].forEach(i => {
+      if (t0) t0.textContent = savedInput;
+      if (t1) t1.textContent = savedNl;
+      if (t2) t2.textContent = savedEn;
+      if (t3) t3.textContent = savedOutput;
+
+      if (s3) {
+        s3.textContent = "✓ BERHASIL DIPARAFRASE";
+        s3.style.color = "#10b981";
+      }
+
+      [1, 2, 3].forEach((i) => {
         const badge = document.getElementById(`badge-${i}`);
-        const statusSpan = document.getElementById(`status-${i}`);
-        const textSpan = document.getElementById(`progress-text-${i}`);
-        
-        if (badge) badge.classList.remove('loading', 'done', 'error');
-        if (statusSpan) {
-            statusSpan.textContent = '';
-            statusSpan.style.animation = 'none';
-        }
-        if (textSpan) textSpan.textContent = '';
+        if (badge) badge.classList.add("done");
       });
     }
 
-    function updateBadge(stepIdx: number, status: 'loading' | 'done' | 'error') {
+    textarea.removeEventListener("input", handleCharCount);
+    textarea.addEventListener("input", handleCharCount);
+    // ✅ Pemicu Toast pas User pencet Ctrl + V atau Klik Kanan -> Tempel
+    textarea.addEventListener("paste", () => {
+      // Kasih delay tipis 50ms biar teksnya masuk utuh ke textarea dulu baru toast nongol
+      setTimeout(() => {
+        handleCharCount();
+        showToast("✓ TEKS BERHASIL DITEMPEL");
+      }, 50);
+    });
+    textarea.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+
+    function handleCharCount() {
+      if (charCount && textarea) {
+        charCount.textContent = `${textarea.value.length} / 3000`;
+        localStorage.setItem("paraphrase_input", textarea.value);
+      }
+    }
+
+    function setLoading(on: boolean) {
+      isProcessing = on;
+      if (btn) btn.disabled = on;
+      if (btnLabel) btnLabel.classList.toggle("hidden", on);
+      if (btnSpinner) btnSpinner.classList.toggle("hidden", !on);
+    }
+
+    function showError(msg: string) {
+      if (errorBox) {
+        errorBox.textContent = msg;
+        errorBox.classList.remove("hidden");
+      }
+      if (results) results.style.setProperty("display", "none", "important");
+    }
+
+    function hideError() {
+      if (errorBox) errorBox.classList.add("hidden");
+    }
+
+    function resetBadges() {
+      [1, 2, 3].forEach((i) => {
+        const badge = document.getElementById(`badge-${i}`);
+        const statusSpan = document.getElementById(`status-${i}`);
+        const textSpan = document.getElementById(`progress-text-${i}`);
+
+        if (badge) badge.classList.remove("loading", "done", "error");
+        if (statusSpan) {
+          statusSpan.textContent = "";
+          statusSpan.style.animation = "none";
+          statusSpan.style.color = "";
+        }
+        if (textSpan) textSpan.textContent = "";
+      });
+
+      if (nodeNl) nodeNl.classList.remove("processing");
+      if (nodeEn) nodeEn.classList.remove("processing");
+      if (nodeFinal) nodeFinal.classList.remove("processing");
+    }
+
+    function updateBadge(
+      stepIdx: number,
+      status: "loading" | "done" | "error",
+    ) {
       const badge = document.getElementById(`badge-${stepIdx}`);
       const statusSpan = document.getElementById(`status-${stepIdx}`);
       if (!badge || !statusSpan) return;
 
-      badge.classList.remove('loading', 'done', 'error');
+      badge.classList.remove("loading", "done", "error");
       badge.classList.add(status);
 
-      if (status === 'loading') {
-        statusSpan.textContent = ' ⟳';
-        statusSpan.style.animation = 'spin 1s linear infinite';
-      } else if (status === 'done') {
-        statusSpan.textContent = ' ✓';
-        statusSpan.style.color = '#10b981';
-        statusSpan.style.animation = 'none';
-      } else if (status === 'error') {
-        statusSpan.textContent = ' ✕';
-        statusSpan.style.color = '#ef4444';
-        statusSpan.style.animation = 'none';
+      if (status === "loading") {
+        statusSpan.textContent = " ⟳";
+        statusSpan.style.animation = "spin 1s linear infinite";
+      } else if (status === "done") {
+        statusSpan.textContent = " ✓";
+        statusSpan.style.color = "#10b981";
+        statusSpan.style.animation = "none";
+      } else if (status === "error") {
+        statusSpan.textContent = " ✕";
+        statusSpan.style.color = "#ef4444";
+        statusSpan.style.animation = "none";
       }
     }
 
-    btn.addEventListener('click', async () => {
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        textarea.value = "";
+        handleCharCount();
+        hideError();
+        resetBadges();
+        localStorage.clear();
+        showToast("✕ KALIMAT DIBERSIHKAN");
+        if (results) results.style.setProperty("display", "none", "important");
+      };
+    }
+
+    if (pasteBtn) {
+      pasteBtn.onclick = async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          textarea.value = text;
+          handleCharCount();
+          showToast("✓ TEKS BERHASIL DITEMPEL");
+        } catch (e) {}
+      };
+    }
+
+    if (goUpBtn) {
+      goUpBtn.onclick = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      window.onscroll = () => {
+        if (
+          document.body.scrollTop > 400 ||
+          document.documentElement.scrollTop > 400
+        ) {
+          goUpBtn.classList.remove("hidden");
+        } else {
+          goUpBtn.classList.add("hidden");
+        }
+      };
+    }
+
+    btn.removeEventListener("click", handleParaphrase);
+    btn.addEventListener("click", handleParaphrase);
+
+    async function handleParaphrase() {
       if (isProcessing) return;
 
       const text = textarea.value.trim();
       if (!text) {
-        showError('Masukkan teks terlebih dahulu.');
+        showError("Masukkan teks terlebih dahulu.");
         return;
       }
 
       setLoading(true);
       hideError();
       resetBadges();
-      results.classList.add('hidden');
+      if (dropdown) dropdown.open = false;
+      if (results) results.style.setProperty("display", "none", "important");
+
+      const status3 = document.getElementById("status-3");
 
       try {
-        const text0 = document.getElementById('progress-text-0');
+        const text0 = document.getElementById("progress-text-0");
         if (text0) text0.textContent = text;
-        results.classList.remove('hidden');
 
-        updateBadge(1, 'loading');
-        const nlText = await translate(text, 'id', 'nl');
-        const text1 = document.getElementById('progress-text-1');
-        if (text1) text1.textContent = nlText;
-        updateBadge(1, 'done');
-
-        updateBadge(2, 'loading');
-        const enText = await translate(nlText, 'nl', 'en');
-        const text2 = document.getElementById('progress-text-2');
-        if (text2) text2.textContent = enText;
-        updateBadge(2, 'done');
-
-        updateBadge(3, 'loading');
-        const idText = await translate(enText, 'en', 'id');
-        const text3 = document.getElementById('progress-text-3');
-        if (text3) text3.textContent = idText;
-        updateBadge(3, 'done');
+        if (results) results.style.setProperty("display", "flex", "important");
 
         setTimeout(() => {
-          results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
+          if (results)
+            results.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 80);
+
+        // Step 1: ID → NL
+        if (status3) {
+          status3.textContent = "— MEMPROSES (1/3)";
+          status3.style.color = "#f59e0b";
+        }
+        updateBadge(1, "loading");
+        if (nodeNl) nodeNl.classList.add("processing");
+        const nlText = await translate(text, "id", "nl");
+        const text1 = document.getElementById("progress-text-1");
+        if (text1) text1.textContent = nlText;
+        updateBadge(1, "done");
+        if (nodeNl) nodeNl.classList.remove("processing");
+
+        // Step 2: NL → EN
+        if (status3) {
+          status3.textContent = "— MEMPROSES (2/3)";
+          status3.style.color = "#f59e0b";
+        }
+        updateBadge(2, "loading");
+        if (nodeEn) nodeEn.classList.add("processing");
+        const enText = await translate(nlText, "nl", "en");
+        const text2 = document.getElementById("progress-text-2");
+        if (text2) text2.textContent = enText;
+        updateBadge(2, "done");
+        if (nodeEn) nodeEn.classList.remove("processing");
+
+        // Step 3: EN → ID
+        if (status3) {
+          status3.textContent = "— MENYUSUN HASIL (3/3)";
+          status3.style.color = "#f59e0b";
+        }
+        updateBadge(3, "loading");
+        if (nodeFinal) nodeFinal.classList.add("processing");
+        const idText = await translate(enText, "en", "id");
+        const text3 = document.getElementById("progress-text-3");
+        if (text3) text3.textContent = idText;
+        updateBadge(3, "done");
+        if (nodeFinal) nodeFinal.classList.remove("processing");
+
+        localStorage.setItem("paraphrase_input", text);
+        localStorage.setItem("paraphrase_nl", nlText);
+        localStorage.setItem("paraphrase_en", enText);
+        localStorage.setItem("paraphrase_output", idText);
+
+        if (status3) {
+          status3.textContent = "✓ BERHASIL DIPARAFRASE";
+          status3.style.color = "#10b981";
+        }
+
+        setTimeout(() => {
+          if (results)
+            results.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }, 150);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         showError(`Gagal menerjemahkan: ${msg}`);
-        [1, 2, 3].forEach(i => {
+        if (dropdown) dropdown.open = true;
+
+        if (status3) {
+          status3.textContent = "✕ GAGAL";
+          status3.style.color = "#ef4444";
+        }
+
+        [1, 2, 3].forEach((i) => {
           const badge = document.getElementById(`badge-${i}`);
-          if (badge && badge.classList.contains('loading')) {
-            updateBadge(i, 'error');
+          if (badge && badge.classList.contains("loading")) {
+            updateBadge(i, "error");
           }
         });
+        if (nodeNl) nodeNl.classList.remove("processing");
+        if (nodeEn) nodeEn.classList.remove("processing");
+        if (nodeFinal) nodeFinal.classList.remove("processing");
       } finally {
         setLoading(false);
       }
-    });
+    }
 
-    copyBtn.addEventListener('click', () => {
-      const resultText = document.getElementById('progress-text-3');
-      if (!resultText || !resultText.textContent) return;
-      
-      navigator.clipboard.writeText(resultText.textContent);
-      const orig = copyBtn.textContent;
-      copyBtn.textContent = 'Tersalin ✓';
-      setTimeout(() => { copyBtn.textContent = orig; }, 2000);
-    });
-  });
+    if (copyBtn) {
+      copyBtn.replaceWith(copyBtn.cloneNode(true));
+      const freshCopyBtn = document.getElementById(
+        "copyBtn",
+      ) as HTMLButtonElement;
+
+      freshCopyBtn.addEventListener("click", () => {
+        const resultText = document.getElementById("progress-text-3");
+        if (!resultText || !resultText.textContent) return;
+
+        navigator.clipboard.writeText(resultText.textContent);
+        const orig = freshCopyBtn.textContent;
+        freshCopyBtn.textContent = "Tersalin ✓";
+        setTimeout(() => {
+          freshCopyBtn.textContent = orig;
+        }, 2000);
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", initParaphraser);
+  document.addEventListener("astro:page-load", initParaphraser);
+
+  function showToast(message: string) {
+    const toast = document.getElementById("toastNotification");
+    if (!toast) return;
+
+    const newToast = toast.cloneNode(true) as HTMLDivElement;
+    newToast.textContent = message;
+    newToast.classList.remove("hidden");
+
+    toast.parentNode?.replaceChild(newToast, toast);
+
+    setTimeout(() => {
+      newToast.classList.add("hidden");
+    }, 1800);
+  }
 </script>
 
 <style>
-  /* Hanya style untuk komponen ini, tanpa merusak body global */
   .app-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 3rem 1.5rem 4rem;
-    gap: 2.5rem;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .app-header {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .logo-mark {
-    font-size: 2rem;
-    color: #f59e0b;
-    line-height: 1;
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { text-shadow: 0 0 8px #f59e0b66; }
-    50%      { text-shadow: 0 0 24px #f59e0bcc; }
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .app-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(2.2rem, 6vw, 3.5rem);
-    font-weight: 400;
-    color: #f8fafc;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin: 0;
-  }
-
-  .app-subtitle {
-    font-size: 0.95rem;
-    color: #94a3b8;
-    font-weight: 300;
-    margin: 0;
-  }
-
-  .lang-chain {
-    color: #f59e0b;
-    font-weight: 500;
-    font-family: 'DM Serif Display', serif;
-    font-style: italic;
+    padding: 2rem 1.5rem 3rem;
+    gap: 1.5rem;
+    font-family: "DM Sans", sans-serif;
+    color: #e2e8f0;
   }
 
   .card-main {
     width: 100%;
     max-width: 720px;
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(248, 250, 252, 0.08);
-    border-radius: 20px;
+    background: #0b1329;
+    border: 2px solid #1e293b;
+    border-radius: 18px;
     padding: 2rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    backdrop-filter: blur(16px);
-    box-shadow:
-      0 0 0 1px rgba(245,158,11,0.05),
-      0 20px 60px rgba(0,0,0,0.5),
-      inset 0 1px 0 rgba(248,250,252,0.05);
+    box-shadow: 8px 8px 0px #020617;
   }
 
   .input-section {
@@ -355,243 +468,252 @@
     font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: #64748b;
   }
 
-  .flag { font-size: 1.1rem; }
+  .flag {
+    font-size: 1.1rem;
+  }
 
   textarea {
     width: 100%;
-    min-height: 120px;
-    padding: 1rem 1.25rem;
-    background: rgba(248,250,252,0.04);
-    border: 1px solid rgba(248,250,252,0.1);
-    border-radius: 12px;
-    color: #f8fafc;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1rem;
+    min-height: 130px;
+    padding: 1rem 1.15rem 1.25rem;
+    background: #071122;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    color: #e2e8f0;
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.95rem;
     font-weight: 300;
     line-height: 1.7;
     resize: vertical;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
     box-sizing: border-box;
     caret-color: #f59e0b;
   }
 
-  textarea::placeholder { color: #475569; }
-  textarea:focus {
-    outline: none;
-    border-color: rgba(245,158,11,0.4);
-    box-shadow: 0 0 0 3px rgba(245,158,11,0.08);
+  textarea::placeholder {
+    color: #475569;
+    font-size: 15px;
   }
 
-  .char-row { display: flex; justify-content: flex-end; }
-  .char-count { font-size: 0.72rem; color: #475569; font-variant-numeric: tabular-nums; }
+  textarea:focus {
+    outline: none;
+    border-color: #f59e0b;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55);
+    transform: translateY(-1px);
+    background: #020617;
+  }
+
+  .char-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .char-count {
+    font-size: 0.72rem;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+  }
 
   .btn-paraphrase {
     width: 100%;
-    padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    border: none;
-    border-radius: 12px;
-    color: #0f172a;
-    font-family: 'DM Sans', sans-serif;
+    padding: 0.95rem 1.5rem;
+    background: #0f172a;
+    border: 2px solid #f59e0b;
+    color: #f8fafc;
+    font-family: "DM Sans", sans-serif;
     font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      background 0.18s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    overflow: hidden;
   }
 
-  .btn-paraphrase:hover { filter: brightness(1.1); }
-  .btn-paraphrase:active { transform: scale(0.99); }
-  .btn-paraphrase:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-paraphrase:hover {
+    background: #111827;
+    transform: scale(1.005);
+    box-shadow: 0 12px 40px rgba(245, 158, 11, 0.1);
+  }
+
+  .btn-paraphrase:active {
+    transform: scale(0.99);
+  }
+
+  .btn-paraphrase:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
 
   .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(15,23,42,0.3);
-    border-top-color: #0f172a;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    width: 20px;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+    animation: pulse-soft 1s ease-in-out infinite;
   }
 
-  .hidden { display: none !important; }
+  .action-btn {
+    background: #071226;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition:
+      transform 0.12s ease,
+      border-color 0.12s ease;
+  }
+
+  .action-btn:hover {
+    transform: translateY(-2px);
+    border-color: #f59e0b;
+  }
+
+  .action-btn.ghost {
+    background: transparent;
+    border-style: dashed;
+    color: #94a3b8;
+  }
+
+  .btn-go-up {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 99;
+    background: #0f172a;
+    border: 2px solid #f59e0b;
+    color: #f8fafc;
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 4px 4px 0px #020617;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      background 0.15s ease;
+  }
+
+  .btn-go-up:hover {
+    background: #111827;
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px #020617;
+  }
+
+  .btn-go-up:active {
+    transform: translateY(0px);
+    box-shadow: 2px 2px 0px #020617;
+  }
+
+  .hidden {
+    display: none !important;
+  }
 
   .error-box {
-    padding: 0.875rem 1.25rem;
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.25);
+    padding: 0.95rem 1.25rem;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-left: 4px solid #ef4444;
     border-radius: 10px;
     color: #fca5a5;
-    font-size: 0.875rem;
-  }
-
-  .results {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    border-top: 1px solid rgba(248,250,252,0.06);
-    padding-top: 1.5rem;
-    animation: fadeUp 0.4s ease-out;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .progress-chain {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .progress-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
-    background: rgba(248,250,252,0.03);
-    border: 1px solid rgba(248,250,252,0.07);
-    border-radius: 12px;
-    transition: all 0.2s;
-  }
-
-  .progress-step:hover {
-    background: rgba(248,250,252,0.05);
-    border-color: rgba(248,250,252,0.12);
-  }
-
-  .progress-badge {
-    flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: rgba(245,158,11,0.1);
-    border: 1.5px solid rgba(245,158,11,0.2);
-    transition: all 0.3s;
-    font-size: 1.5rem;
-  }
-
-  .progress-badge.active {
-    background: rgba(245,158,11,0.15);
-    border-color: rgba(245,158,11,0.4);
-    box-shadow: 0 0 16px rgba(245,158,11,0.2);
-  }
-
-  .progress-badge.loading {
-    border-color: #3b82f6;
-    background: rgba(59,130,246,0.1);
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  .progress-badge.done {
-    background: rgba(16,185,129,0.1);
-    border-color: #10b981;
-    box-shadow: 0 0 12px rgba(16,185,129,0.2);
-  }
-
-  .progress-badge.error {
-    background: rgba(239,68,68,0.1);
-    border-color: #ef4444;
-    box-shadow: 0 0 12px rgba(239,68,68,0.2);
-  }
-
-  .progress-content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .progress-title {
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .progress-status {
-    display: inline-block;
-    font-size: 1rem;
-    font-weight: 400;
-  }
-
-  .progress-text {
     font-size: 0.9rem;
-    color: #cbd5e1;
-    line-height: 1.6;
-    margin: 0;
-    font-weight: 300;
-    word-break: break-word;
-    white-space: pre-wrap;
-    min-height: 1.5em;
-  }
-
-  .progress-arrow {
-    text-align: center;
-    color: #f59e0b;
-    font-size: 1rem;
-    margin: -0.5rem 0;
-    opacity: 0.5;
-  }
-
-  .result-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    padding-top: 0.5rem;
-  }
-
-  .btn-copy {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #0f172a;
-    background: linear-gradient(135deg, #10b981, #059669);
-    border: none;
-    border-radius: 10px;
-    padding: 0.625rem 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .btn-copy:hover {
-    filter: brightness(1.1);
-  }
-
-  .btn-copy:active {
-    transform: scale(0.98);
   }
 
   .app-footer {
     font-size: 0.72rem;
-    color: #334155;
-    letter-spacing: 0.05em;
+    color: #475569;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
+  .app-footer a {
+    color: #f8fafc;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(248, 250, 252, 0.4);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .app-footer a:hover {
+    color: #f59e0b;
+    border-color: #f59e0b;
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   @media (max-width: 640px) {
-    .app-wrapper { padding: 2rem 1rem 3rem; }
-    .card-main { padding: 1.5rem; }
-    .progress-badge { width: 40px; height: 40px; font-size: 1.2rem; }
-    .progress-step { gap: 0.75rem; padding: 0.875rem 1rem; }
+    .app-wrapper {
+      padding: 1rem 0.5rem 2rem;
+      width: 100%;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+
+    .card-main {
+      padding: 1rem;
+      width: 100%;
+      box-shadow: 4px 4px 0px #020617;
+      box-sizing: border-box;
+    }
+
+    .btn-go-up {
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 40px;
+      height: 40px;
+      font-size: 1.1rem;
+    }
+
+    :global(.flow-visual) {
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      gap: 0.4rem !important;
+    }
+
+    :global(.flow-node) {
+      font-size: 0.75rem !important;
+      padding: 0.2rem 0.4rem !important;
+    }
+
+    :global(.flow-connector) {
+      font-size: 0.75rem !important;
+    }
   }
 </style>

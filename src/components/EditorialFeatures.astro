@@ -1,0 +1,56 @@
+---
+// src/components/EditorialFeatures.astro
+---
+<section class="features">
+  <div class="feature-item">
+    <strong>Hilangkan Plagiarisme.</strong> Ubah susunan kalimat secara total biar hasilnya tetap bersih, tapi makna dan isi utamanya nggak berubah sama sekali.
+  </div>
+  <div class="feature-item">
+    <strong>Rasa Bahasa Tetap Lokal.</strong> Jaga gaya bahasa dan nadanya biar hasil parafrase tetap terasa enak dan alami dibaca, bukan sekadar terjemahan kaku.
+  </div>
+  <div class="feature-item">
+    <strong>Proses Berantai Cepat.</strong> Sistem kerja otomatis yang jelas dari awal sampai akhir, lengkap dengan tanda proses di tiap tahapan bahasanya.
+  </div>
+</section>
+
+<style>
+  .features {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .feature-item {
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .feature-item strong {
+    display: inline-block;
+    margin-right: 0.5rem;
+    color: #f59e0b;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  @media (max-width: 640px) {
+    .features {
+      gap: 0.5rem;
+      margin: 0 auto 1.5rem;
+      padding: 0 0.25rem;
+    }
+
+    .feature-item {
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+  }
+</style>

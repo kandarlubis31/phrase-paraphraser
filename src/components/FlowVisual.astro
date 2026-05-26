@@ -1,0 +1,95 @@
+---
+// src/components/FlowVisual.astro
+---
+<aside class="flow-card" aria-hidden="true">
+  <div class="flow-card-inner">
+    <div class="flow-card-title">Cara Kerja</div>
+    <div class="flow-visual small">
+      <span class="flow-node node-id">ID</span>
+      <span class="flow-connector">→</span>
+      <span class="flow-node node-nl">NL</span>
+      <span class="flow-connector">→</span>
+      <span class="flow-node node-en">EN</span>
+      <span class="flow-connector muted">↺</span>
+      <span class="flow-node node-final final">ID</span>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .flow-card { 
+    width: 100%;
+    max-width: 720px; 
+    margin: 0 auto 1.5rem; 
+    box-sizing: border-box;
+    padding: 0 0.5rem;
+  }
+  
+  .flow-card-inner { 
+    background: #061225; 
+    border: 1px solid #1e293b; 
+    padding: 0.85rem 1.25rem; 
+    border-radius: 12px; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 4px 4px 0px #020617;
+  }
+  
+  .flow-card-title { 
+    font-family: 'DM Serif Display', serif; 
+    font-size: 0.85rem; 
+    color: #64748b; 
+    text-transform: uppercase; 
+    letter-spacing: 0.12em; 
+  }
+  
+  .flow-visual { display: flex; align-items: center; gap: 0.5rem; }
+  .flow-visual.small .flow-node { font-size: 0.85rem; padding: 0.25rem 0.5rem; }
+  .flow-node { background: #0f172a; border: 1px solid #334155; padding: 0.35rem 0.6rem; border-radius: 8px; color: #e2e8f0; font-weight: 600; }
+  .flow-node.final { border-color: #10b981; }
+  .flow-connector { color: #475569; font-weight: 700; }
+  .flow-connector.muted { color: #f59e0b; }
+
+  /* Processing state for real-time flow */
+  @keyframes fv-pulse {
+    0% { opacity: 0.6; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); }
+    100% { opacity: 0.6; transform: translateY(0); }
+  }
+
+  .flow-node.processing {
+    border-color: #f59e0b;
+    box-shadow: 0 6px 18px rgba(245,158,11,0.10);
+    animation: fv-pulse 1s ease-in-out infinite;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 640px) {
+    .flow-card { 
+      margin: 0 auto 1rem;
+      padding: 0 0.25rem;
+    }
+
+    .flow-card-inner { 
+      flex-direction: column; 
+      gap: 0.75rem; 
+      align-items: flex-start;
+      padding: 0.75rem 1rem;
+    }
+
+    .flow-visual { 
+      gap: 0.25rem;
+      flex-wrap: wrap;
+    }
+
+    .flow-visual.small .flow-node { 
+      font-size: 0.75rem; 
+      padding: 0.2rem 0.4rem; 
+    }
+
+    .flow-connector { 
+      font-size: 0.85rem; 
+    }
+  }
+</style>
