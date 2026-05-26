@@ -14,32 +14,33 @@ import ResultProgress from "./ResultProgress.astro";
   <FlowVisual />
 
   <div class="card-main">
+    <div id="linearProgress" class="linear-progress hidden">
+      <div class="linear-bar"></div>
+    </div>
+
     <div class="input-section">
-      <div
-        class="section-label"
-        style="display:flex;justify-content:space-between;align-items:center;"
-      >
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <span class="flag">🇮🇩</span>
-          <span>Teks Indonesia</span>
+      <div class="section-label">
+        <div style="display:flex;align-items:center;gap:0.4rem;">
+          <span class="flag-mono">[id_ID]</span>
+          <span>Input Sumber</span>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <button id="pasteBtn" class="action-btn">Tempel</button>
-          <button id="clearBtn" class="action-btn ghost">Bersihkan</button>
+        <div style="display:flex;gap:0.4rem;align-items:center;">
+          <button id="pasteBtn" class="action-btn">Paste</button>
+          <button id="clearBtn" class="action-btn ghost">Clear</button>
         </div>
       </div>
       <textarea
         id="inputText"
-        placeholder="Tulis teksmu di sini..."
+        placeholder="Masukkan teks komparasi di sini..."
         maxlength="3000"></textarea>
       <div class="char-row">
-        <span id="charCount" class="char-count">0 / 3000</span>
+        <span id="charCount" class="char-count">0 / 3000 EOF</span>
       </div>
     </div>
 
     <button id="paraphraseBtn" class="btn-paraphrase">
-      <span id="btnLabel">Parafrasakan ✦</span>
-      <span id="btnSpinner" class="spinner hidden"></span>
+      <span id="btnLabel">EXECUTE PARAPHRASE</span>
+      <span id="btnSpinner" class="spinner-txt hidden">EXEC_</span>
     </button>
 
     <div id="errorBox" class="error-box hidden"></div>
@@ -52,47 +53,31 @@ import ResultProgress from "./ResultProgress.astro";
   >
 
   <footer class="app-footer">
-    © 2026 Phrase Paraphraser · Powered by Back-Translation ·
+    root@phrase-paraphraser:~#
     <a
       href="https://www.instagram.com/kandar.lubis31"
       target="_blank"
-      rel="noopener">@kandar.lubis31</a
-    >
-    · <a href="https://github.com/kandarlubis31" target="_blank" rel="noopener"
+      rel="noopener"
+      >@kandar.lubis31</a
+    > ·
+    <a href="https://github.com/kandarlubis31" target="_blank" rel="noopener"
       >GitHub</a
-    >
-    · <a href="https://www.paklubis.my.id" target="_blank" rel="noopener"
+    > ·
+    <a href="https://www.paklubis.my.id" target="_blank" rel="noopener"
       >paklubis.my.id</a
     >
   </footer>
 </div>
 
 <script>
-  const WORKER_URL = "https://phrase-proxy.kandarlubis31.workers.dev";
+  import {
+    translate,
+    highlightDifferences,
+    initializeCooldown,
+    validateInputText,
+  } from "../utils/paraphraseEngine";
+
   let isProcessing = false;
-
-  async function translate(
-    text: string,
-    src: string,
-    tgt: string,
-  ): Promise<string> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12_000);
-    try {
-      const res = await fetch(`${WORKER_URL}?t=${Date.now()}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, src, tgt }),
-        signal: controller.signal,
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      return data.result;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
 
   function initParaphraser() {
     const textarea = document.getElementById(
@@ -108,6 +93,9 @@ import ResultProgress from "./ResultProgress.astro";
     const dropdown = document.querySelector(
       ".process-dropdown",
     ) as HTMLDetailsElement;
+    const linearProgress = document.getElementById(
+      "linearProgress",
+    ) as HTMLDivElement;
 
     const pasteBtn = document.getElementById("pasteBtn") as HTMLButtonElement;
     const clearBtn = document.getElementById("clearBtn") as HTMLButtonElement;
@@ -120,6 +108,31 @@ import ResultProgress from "./ResultProgress.astro";
     if (!textarea || !btn) return;
 
     if (results) results.style.setProperty("display", "none", "important");
+
+    // 🖥️ SYSTEM TERMINAL HEADER CLOCK ENGINE (Nembak ID murni di AppHeader)
+    const liveClockEl = document.getElementById("liveClock");
+    if (liveClockEl) {
+      const updateClock = () => {
+        const now = new Date();
+        const days = [
+          "MINGGU",
+          "SENIN",
+          "SELASA",
+          "RABU",
+          "KAMIS",
+          "JUMAT",
+          "SABTU",
+        ];
+        const dayName = days[now.getDay()];
+        const timeStr = now.toTimeString().split(" ")[0];
+        liveClockEl.textContent = `${dayName} ${timeStr}`;
+      };
+      updateClock();
+      if ((window as any).terminalClockInterval) {
+        clearInterval((window as any).terminalClockInterval);
+      }
+      (window as any).terminalClockInterval = setInterval(updateClock, 1000);
+    }
 
     const savedInput = localStorage.getItem("paraphrase_input");
     const savedOutput = localStorage.getItem("paraphrase_output");
@@ -143,11 +156,21 @@ import ResultProgress from "./ResultProgress.astro";
       if (t0) t0.textContent = savedInput;
       if (t1) t1.textContent = savedNl;
       if (t2) t2.textContent = savedEn;
-      if (t3) t3.textContent = savedOutput;
 
-      if (s3) {
-        s3.textContent = "✓ BERHASIL DIPARAFRASE";
-        s3.style.color = "#10b981";
+      if (t3) {
+        const resObj = highlightDifferences(
+          savedInput,
+          savedOutput,
+          Date.now() - 450,
+        );
+        t3.innerHTML = resObj.html;
+        if (s3) {
+          const now = new Date();
+          const days = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
+          const dayName = days[now.getDay()];
+          s3.textContent = `// EVAL_SUCCESS [${dayName}] [SIZE: ${resObj.metrics.sizeBytes}B] [LATENCY: ${resObj.metrics.durationMs}ms]`;
+          s3.style.color = "#10b981";
+        }
       }
 
       [1, 2, 3].forEach((i) => {
@@ -156,16 +179,29 @@ import ResultProgress from "./ResultProgress.astro";
       });
     }
 
+    const storedCooldown = sessionStorage.getItem("paraphrase_cooldown");
+    if (storedCooldown) {
+      const remainingTime = Math.ceil(
+        (parseInt(storedCooldown) - Date.now()) / 1000,
+      );
+      if (remainingTime > 0) {
+        isProcessing = true;
+        initializeCooldown(btn, btnLabel, remainingTime, () => {
+          isProcessing = false;
+        });
+      }
+    }
+
     textarea.removeEventListener("input", handleCharCount);
     textarea.addEventListener("input", handleCharCount);
-    // ✅ Pemicu Toast pas User pencet Ctrl + V atau Klik Kanan -> Tempel
+
     textarea.addEventListener("paste", () => {
-      // Kasih delay tipis 50ms biar teksnya masuk utuh ke textarea dulu baru toast nongol
       setTimeout(() => {
         handleCharCount();
         showToast("✓ TEKS BERHASIL DITEMPEL");
       }, 50);
     });
+
     textarea.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
@@ -175,7 +211,7 @@ import ResultProgress from "./ResultProgress.astro";
 
     function handleCharCount() {
       if (charCount && textarea) {
-        charCount.textContent = `${textarea.value.length} / 3000`;
+        charCount.textContent = `${textarea.value.length} / 3000 EOF`;
         localStorage.setItem("paraphrase_input", textarea.value);
       }
     }
@@ -185,11 +221,12 @@ import ResultProgress from "./ResultProgress.astro";
       if (btn) btn.disabled = on;
       if (btnLabel) btnLabel.classList.toggle("hidden", on);
       if (btnSpinner) btnSpinner.classList.toggle("hidden", !on);
+      if (linearProgress) linearProgress.classList.toggle("hidden", !on);
     }
 
     function showError(msg: string) {
       if (errorBox) {
-        errorBox.textContent = msg;
+        errorBox.textContent = `[ERROR] ${msg}`;
         errorBox.classList.remove("hidden");
       }
       if (results) results.style.setProperty("display", "none", "important");
@@ -231,16 +268,13 @@ import ResultProgress from "./ResultProgress.astro";
       badge.classList.add(status);
 
       if (status === "loading") {
-        statusSpan.textContent = " ⟳";
-        statusSpan.style.animation = "spin 1s linear infinite";
+        statusSpan.textContent = " ..";
       } else if (status === "done") {
-        statusSpan.textContent = " ✓";
+        statusSpan.textContent = " OK";
         statusSpan.style.color = "#10b981";
-        statusSpan.style.animation = "none";
       } else if (status === "error") {
-        statusSpan.textContent = " ✕";
+        statusSpan.textContent = " ERR";
         statusSpan.style.color = "#ef4444";
-        statusSpan.style.animation = "none";
       }
     }
 
@@ -290,12 +324,28 @@ import ResultProgress from "./ResultProgress.astro";
     async function handleParaphrase() {
       if (isProcessing) return;
 
+      const cooldownActive = sessionStorage.getItem("paraphrase_cooldown");
+      if (cooldownActive) {
+        const remaining = Math.ceil(
+          (parseInt(cooldownActive) - Date.now()) / 1000,
+        );
+        if (remaining > 0) {
+          showToast(
+            `✕ ANTRIAN PADAT: COOLDOWN_${remaining.toString().padStart(2, "0")}s`,
+          );
+          return;
+        }
+      }
+
       const text = textarea.value.trim();
-      if (!text) {
-        showError("Masukkan teks terlebih dahulu.");
+
+      const validation = validateInputText(text);
+      if (!validation.valid) {
+        showError(validation.error || "Input tidak valid.");
         return;
       }
 
+      const pipelineStartTime = Date.now();
       setLoading(true);
       hideError();
       resetBadges();
@@ -317,8 +367,8 @@ import ResultProgress from "./ResultProgress.astro";
 
         // Step 1: ID → NL
         if (status3) {
-          status3.textContent = "— MEMPROSES (1/3)";
-          status3.style.color = "#f59e0b";
+          status3.textContent = ":: FETCH_PIPELINE (1/3) [nl]";
+          status3.style.color = "#a3a3a3";
         }
         updateBadge(1, "loading");
         if (nodeNl) nodeNl.classList.add("processing");
@@ -330,8 +380,7 @@ import ResultProgress from "./ResultProgress.astro";
 
         // Step 2: NL → EN
         if (status3) {
-          status3.textContent = "— MEMPROSES (2/3)";
-          status3.style.color = "#f59e0b";
+          status3.textContent = ":: FETCH_PIPELINE (2/3) [en]";
         }
         updateBadge(2, "loading");
         if (nodeEn) nodeEn.classList.add("processing");
@@ -343,14 +392,19 @@ import ResultProgress from "./ResultProgress.astro";
 
         // Step 3: EN → ID
         if (status3) {
-          status3.textContent = "— MENYUSUN HASIL (3/3)";
-          status3.style.color = "#f59e0b";
+          status3.textContent = ":: INTEGRATE_PIPELINE (3/3) [id_final]";
         }
         updateBadge(3, "loading");
         if (nodeFinal) nodeFinal.classList.add("processing");
         const idText = await translate(enText, "en", "id");
         const text3 = document.getElementById("progress-text-3");
-        if (text3) text3.textContent = idText;
+
+        const diffObject = highlightDifferences(
+          text,
+          idText,
+          pipelineStartTime,
+        );
+
         updateBadge(3, "done");
         if (nodeFinal) nodeFinal.classList.remove("processing");
 
@@ -359,10 +413,53 @@ import ResultProgress from "./ResultProgress.astro";
         localStorage.setItem("paraphrase_en", enText);
         localStorage.setItem("paraphrase_output", idText);
 
-        if (status3) {
-          status3.textContent = "✓ BERHASIL DIPARAFRASE";
-          status3.style.color = "#10b981";
+        if (text3) {
+          text3.innerHTML = "";
+
+          const tokens = diffObject.html.split(
+            /(<span class="diff-highlight">.*?<\/span>|\s+)/g,
+          );
+          let tokenIdx = 0;
+
+          if (status3) {
+            status3.textContent = `:: STREAMING_OUTPUT [SIZE: ${diffObject.metrics.sizeBytes}B]`;
+            status3.style.color = "#f59e0b";
+          }
+
+          const streamInterval = setInterval(() => {
+            const batchSize = 3;
+            let chunk = "";
+
+            for (let b = 0; b < batchSize; b++) {
+              if (tokenIdx < tokens.length) {
+                chunk += tokens[tokenIdx];
+                tokenIdx++;
+              }
+            }
+
+            text3.innerHTML += chunk;
+
+            if (tokenIdx >= tokens.length) {
+              clearInterval(streamInterval);
+              if (status3) {
+                const now = new Date();
+                const days = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
+                const dayName = days[now.getDay()];
+                status3.textContent = `// EVAL_SUCCESS [${dayName}] [SIZE: ${diffObject.metrics.sizeBytes}B] [LATENCY: ${diffObject.metrics.durationMs}ms]`;
+                status3.style.color = "#10b981";
+              }
+            }
+          }, 15);
         }
+
+        const cooldownExpiry = Date.now() + 10000;
+        sessionStorage.setItem(
+          "paraphrase_cooldown",
+          cooldownExpiry.toString(),
+        );
+        initializeCooldown(btn, btnLabel, 10, () => {
+          isProcessing = false;
+        });
 
         setTimeout(() => {
           if (results)
@@ -370,11 +467,11 @@ import ResultProgress from "./ResultProgress.astro";
         }, 150);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        showError(`Gagal menerjemahkan: ${msg}`);
+        showError(msg);
         if (dropdown) dropdown.open = true;
 
         if (status3) {
-          status3.textContent = "✕ GAGAL";
+          status3.textContent = "// EVAL_FAILED";
           status3.style.color = "#ef4444";
         }
 
@@ -404,7 +501,7 @@ import ResultProgress from "./ResultProgress.astro";
 
         navigator.clipboard.writeText(resultText.textContent);
         const orig = freshCopyBtn.textContent;
-        freshCopyBtn.textContent = "Tersalin ✓";
+        freshCopyBtn.textContent = "COPIED";
         setTimeout(() => {
           freshCopyBtn.textContent = orig;
         }, 2000);
@@ -436,78 +533,98 @@ import ResultProgress from "./ResultProgress.astro";
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2rem 1.5rem 3rem;
-    gap: 1.5rem;
-    font-family: "DM Sans", sans-serif;
-    color: #e2e8f0;
+    padding: 3rem 1.5rem;
+    gap: 1.25rem;
+    font-family: "Inter", sans-serif;
+    color: #a3a3a3;
+    background-color: #0a0a0a;
+    min-height: 100vh;
   }
 
   .card-main {
     width: 100%;
     max-width: 720px;
-    background: #0b1329;
-    border: 2px solid #1e293b;
-    border-radius: 18px;
-    padding: 2rem;
+    background: #171717;
+    border: 1px solid #262626;
+    border-radius: 6px;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    box-shadow: 8px 8px 0px #020617;
+    gap: 1.25rem;
+    position: relative;
+    box-shadow: none;
+  }
+
+  .linear-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #262626;
+    overflow: hidden;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
+  .linear-bar {
+    width: 40%;
+    height: 100%;
+    background: #f59e0b;
+    animation: linearMove 1s linear infinite;
+  }
+  @keyframes linearMove {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(250%);
+    }
   }
 
   .input-section {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .section-label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.72rem;
-    font-weight: 600;
+    justify-content: space-between;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    color: #737373;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: #64748b;
   }
 
-  .flag {
-    font-size: 1.1rem;
+  .flag-mono {
+    color: #e5e5e5;
+    background: #262626;
+    padding: 0.05rem 0.25rem;
+    border-radius: 3px;
   }
 
   textarea {
     width: 100%;
     min-height: 130px;
-    padding: 1rem 1.15rem 1.25rem;
-    background: #071122;
-    border: 1px solid #334155;
-    border-radius: 14px;
-    color: #e2e8f0;
-    font-family: "DM Sans", sans-serif;
-    font-size: 0.95rem;
-    font-weight: 300;
-    line-height: 1.7;
+    padding: 0.75rem 0.85rem;
+    background: #0a0a0a;
+    border: 1px solid #262626;
+    border-radius: 4px;
+    color: #e5e5e5;
+    font-family: "Inter", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.6;
     resize: vertical;
-    transition:
-      border-color 0.18s ease,
-      box-shadow 0.18s ease,
-      transform 0.18s ease;
     box-sizing: border-box;
     caret-color: #f59e0b;
-  }
-
-  textarea::placeholder {
-    color: #475569;
-    font-size: 15px;
+    transition: border-color 0.15s ease;
   }
 
   textarea:focus {
     outline: none;
-    border-color: #f59e0b;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55);
-    transform: translateY(-1px);
-    background: #020617;
+    border-color: #404040;
   }
 
   .char-row {
@@ -516,77 +633,73 @@ import ResultProgress from "./ResultProgress.astro";
   }
 
   .char-count {
-    font-size: 0.72rem;
-    color: #475569;
-    font-variant-numeric: tabular-nums;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.7rem;
+    color: #525252;
   }
 
   .btn-paraphrase {
     width: 100%;
-    padding: 0.95rem 1.5rem;
-    background: #0f172a;
-    border: 2px solid #f59e0b;
-    color: #f8fafc;
-    font-family: "DM Sans", sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
+    padding: 0.75rem 1rem;
+    background: #e5e5e5;
+    border: 1px solid #e5e5e5;
+    color: #0a0a0a;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
     letter-spacing: 0.05em;
     cursor: pointer;
-    transition:
-      transform 0.18s ease,
-      box-shadow 0.18s ease,
-      background 0.18s ease;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    transition: opacity 0.15s ease;
   }
 
   .btn-paraphrase:hover {
-    background: #111827;
-    transform: scale(1.005);
-    box-shadow: 0 12px 40px rgba(245, 158, 11, 0.1);
-  }
-
-  .btn-paraphrase:active {
-    transform: scale(0.99);
+    opacity: 0.85;
   }
 
   .btn-paraphrase:disabled {
-    opacity: 0.55;
+    opacity: 0.4;
     cursor: not-allowed;
   }
 
-  .spinner {
-    width: 20px;
-    height: 4px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, #f59e0b, transparent);
-    animation: pulse-soft 1s ease-in-out infinite;
+  .spinner-txt {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8rem;
+    color: #737373;
+    margin-left: 0.5rem;
+    animation: blinkText 0.8s steps(1) infinite;
+  }
+  @keyframes blinkText {
+    50% {
+      opacity: 0;
+    }
   }
 
   .action-btn {
-    background: #071226;
-    border: 1px solid #334155;
-    color: #e2e8f0;
-    padding: 0.35rem 0.6rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    background: #262626;
+    border: 1px solid #404040;
+    color: #d4d4d4;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.7rem;
     cursor: pointer;
-    transition:
-      transform 0.12s ease,
-      border-color 0.12s ease;
   }
 
   .action-btn:hover {
-    transform: translateY(-2px);
-    border-color: #f59e0b;
+    border-color: #737373;
   }
 
   .action-btn.ghost {
     background: transparent;
-    border-style: dashed;
-    color: #94a3b8;
+    border-color: transparent;
+    color: #737373;
+  }
+  .action-btn.ghost:hover {
+    color: #ef4444;
   }
 
   .btn-go-up {
@@ -594,34 +707,22 @@ import ResultProgress from "./ResultProgress.astro";
     bottom: 2rem;
     right: 2rem;
     z-index: 99;
-    background: #0f172a;
-    border: 2px solid #f59e0b;
-    color: #f8fafc;
-    width: 45px;
-    height: 45px;
-    border-radius: 10px;
-    font-size: 1.2rem;
-    font-weight: bold;
+    background: #171717;
+    border: 1px solid #262626;
+    color: #a3a3a3;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 4px 4px 0px #020617;
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease,
-      background 0.15s ease;
   }
-
   .btn-go-up:hover {
-    background: #111827;
-    transform: translateY(-2px);
-    box-shadow: 6px 6px 0px #020617;
-  }
-
-  .btn-go-up:active {
-    transform: translateY(0px);
-    box-shadow: 2px 2px 0px #020617;
+    border-color: #404040;
+    color: #e5e5e5;
   }
 
   .hidden {
@@ -629,91 +730,44 @@ import ResultProgress from "./ResultProgress.astro";
   }
 
   .error-box {
-    padding: 0.95rem 1.25rem;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-left: 4px solid #ef4444;
-    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 4px;
     color: #fca5a5;
-    font-size: 0.9rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
   }
 
   .app-footer {
-    font-size: 0.72rem;
-    color: #475569;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.7rem;
+    color: #525252;
+    width: 100%;
+    max-width: 720px;
+    text-align: left;
+    margin-top: 1rem;
   }
 
   .app-footer a {
-    color: #f8fafc;
+    color: #737373;
     text-decoration: none;
-    border-bottom: 1px dashed rgba(248, 250, 252, 0.4);
-    transition:
-      color 0.2s ease,
-      border-color 0.2s ease;
   }
-
   .app-footer a:hover {
     color: #f59e0b;
-    border-color: #f59e0b;
-  }
-
-  @keyframes pulse-soft {
-    0%,
-    100% {
-      opacity: 0.3;
-    }
-    50% {
-      opacity: 1;
-    }
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   @media (max-width: 640px) {
     .app-wrapper {
-      padding: 1rem 0.5rem 2rem;
-      width: 100%;
-      overflow-x: hidden;
-      box-sizing: border-box;
+      padding: 1.5rem 0.75rem;
+      gap: 1rem;
     }
-
     .card-main {
       padding: 1rem;
-      width: 100%;
-      box-shadow: 4px 4px 0px #020617;
-      box-sizing: border-box;
     }
-
     .btn-go-up {
       bottom: 1.5rem;
       right: 1.5rem;
-      width: 40px;
-      height: 40px;
-      font-size: 1.1rem;
-    }
-
-    :global(.flow-visual) {
-      flex-wrap: wrap !important;
-      justify-content: center !important;
-      gap: 0.4rem !important;
-    }
-
-    :global(.flow-node) {
-      font-size: 0.75rem !important;
-      padding: 0.2rem 0.4rem !important;
-    }
-
-    :global(.flow-connector) {
-      font-size: 0.75rem !important;
     }
   }
 </style>

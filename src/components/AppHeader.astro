@@ -1,11 +1,21 @@
 ---
 // src/components/AppHeader.astro
 ---
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
 <header class="app-header">
-  <div class="logo-mark">✦</div>
+  <div class="meta-indicator">
+    <div style="display:flex;align-items:center;gap:0.4rem;">
+      <span class="status-dot"></span> 
+      <span>STATUS: ACTIVE_RUNNING</span>
+      <span id="liveClock" class="flag-mono-header"></span>
+    </div>
+  </div>
   <h1 class="app-title">Phrase Paraphraser</h1>
   <p class="app-subtitle">
-    Teks kamu melakukan perjalanan: <span class="lang-chain">ID → NL → EN → ID</span>
+    Recursive multi-language loop execution pipeline.
   </p>
 
   <div id="toastNotification" class="toast-toast hidden"></div>
@@ -13,77 +23,85 @@
 
 <style>
   .app-header {
-    text-align: center;
+    text-align: left;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
+    align-items: flex-start;
+    gap: 0.4rem;
     position: relative;
     width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #262626;
   }
 
-  .logo-mark {
-    font-size: 2rem;
-    color: #f59e0b;
-    line-height: 1;
+  .meta-indicator {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: #737373;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: 0.05em;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  }
+
+  /* Styling khusus minimalis untuk jam di area header atas */
+  .flag-mono-header {
+    color: #737373;
+    background: #171717;
+    border: 1px solid #262626;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    margin-left: 0.4rem;
   }
 
   .app-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(2.2rem, 6vw, 3.2rem);
-    font-weight: 400;
-    color: #f8fafc;
-    letter-spacing: -0.03em;
-    line-height: 1.05;
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 500;
+    color: #e5e5e5;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
     margin: 0;
   }
 
   .app-subtitle {
-    font-size: 0.95rem;
-    color: #94a3b8;
-    font-weight: 300;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #525252;
+    font-weight: 400;
     margin: 0;
-    max-width: 38rem;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
-  .lang-chain {
-    color: #f59e0b;
-    font-weight: 500;
-    font-family: 'DM Serif Display', serif;
-    font-style: italic;
-  }
-
-  .app-header::before { 
-    content: ''; 
-    position: absolute; 
-    left: 50%; 
-    top: -1rem; 
-    transform: translateX(-50%); 
-    width: 68px; 
-    height: 4px; 
-    background: linear-gradient(90deg, #f59e0b, #10b981); 
-    border-radius: 2px; 
-    opacity: 0.9; 
-  }
-
-  /* ✅ STYLING TOAST: Tegas, solid, performa tinggi */
   .toast-toast {
     position: fixed;
-    top: 2rem;
+    top: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
-    background: #0f172a;
-    border: 2px solid #f59e0b;
-    color: #f8fafc;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    box-shadow: 4px 4px 0px #020617;
+    background: rgba(23, 23, 23, 0.85);
+    border: 1px solid #d97706;
+    color: #f59e0b;
+    padding: 0.5rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    border-radius: 4px;
     z-index: 9999;
     pointer-events: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     animation: toastFadeInOut 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
@@ -92,9 +110,16 @@
   }
 
   @keyframes toastFadeInOut {
-    0% { opacity: 0; transform: translate(-50%, -10px); }
+    0% { opacity: 0; transform: translate(-50%, -5px); }
     15% { opacity: 1; transform: translate(-50%, 0); }
     85% { opacity: 1; transform: translate(-50%, 0); }
-    100% { opacity: 0; transform: translate(-50%, -10px); }
+    100% { opacity: 0; transform: translate(-50%, -5px); }
+  }
+
+  @media (max-width: 640px) {
+    .app-header {
+      align-items: flex-start;
+      text-align: left;
+    }
   }
 </style>

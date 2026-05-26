@@ -1,14 +1,20 @@
----
-// src/components/ResultProgress.astro
----
 <div id="results" class="results hidden" style="display: none !important;">
   
+  <div class="system-notice-box">
+    <div class="notice-header">
+      <span class="notice-icon">ℹ</span> SYSTEM_NOTICE: INFRASTRUCTURE_LIMITATION
+    </div>
+    <p class="notice-body">
+      Aplikasi ini berjalan sepenuhnya di atas <strong>Serverless Free Tier Architecture</strong> (Cloudflare Workers & MyMemory API). Infrastruktur ini memiliki batas kuota harian statis. Jika proses mengalami kendala, mohon tunggu beberapa saat sebelum melakukan eksekusi ulang.
+    </p>
+  </div>
+
   <div class="progress-step final-result-box" id="step-3">
     <div class="progress-badge" id="badge-3">
-      <span class="flag">🇮🇩</span>
+      <span class="flag-code">id</span>
     </div>
     <div class="progress-content">
-      <div class="progress-title">Hasil Parafrase (Indonesia)
+      <div class="progress-title">OUTPUT_EVALUATION
         <span class="progress-status" id="status-3"></span>
       </div>
       <p class="progress-text" id="progress-text-3"></p>
@@ -17,7 +23,7 @@
 
   <details class="process-dropdown">
     <summary class="dropdown-trigger">
-      <span>Lihat Detail Proses Perjalanan Bahasa</span>
+      <span>[+] VIEW_INTERMEDIATE_LOGS</span>
       <span class="chevron">↓</span>
     </summary>
     
@@ -25,39 +31,39 @@
       <div class="progress-chain">
         <div class="progress-step" id="step-0">
           <div class="progress-badge active" id="badge-0">
-            <span class="flag">🇮🇩</span>
+            <span class="flag-code">id</span>
           </div>
           <div class="progress-content">
-            <div class="progress-title">Indonesian (Original)</div>
-            <p class="progress-text" id="progress-text-0"></p>
+            <div class="progress-title">SOURCE_ORIGINAL</div>
+            <p class="progress-text-log" id="progress-text-0"></p>
           </div>
         </div>
 
-        <div class="progress-arrow">↓</div>
+        <div class="progress-arrow">|</div>
 
         <div class="progress-step" id="step-1">
           <div class="progress-badge" id="badge-1">
-            <span class="flag">🇳🇱</span>
+            <span class="flag-code">nl</span>
           </div>
           <div class="progress-content">
-            <div class="progress-title">Dutch
+            <div class="progress-title">INTERMEDIATE_STAGE_01 [dutch]
               <span class="progress-status" id="status-1"></span>
             </div>
-            <p class="progress-text" id="progress-text-1"></p>
+            <p class="progress-text-log" id="progress-text-1"></p>
           </div>
         </div>
 
-        <div class="progress-arrow">↓</div>
+        <div class="progress-arrow">|</div>
 
         <div class="progress-step" id="step-2">
           <div class="progress-badge" id="badge-2">
-            <span class="flag">🇬🇧</span>
+            <span class="flag-code">en</span>
           </div>
           <div class="progress-content">
-            <div class="progress-title">English
+            <div class="progress-title">INTERMEDIATE_STAGE_02 [english]
               <span class="progress-status" id="status-2"></span>
             </div>
-            <p class="progress-text" id="progress-text-2"></p>
+            <p class="progress-text-log" id="progress-text-2"></p>
           </div>
         </div>
       </div>
@@ -65,7 +71,7 @@
   </details>
 
   <div class="result-actions">
-    <button id="copyBtn" class="btn-copy">Salin Hasil Akhir</button>
+    <button id="copyBtn" class="btn-copy">COPY_OUTPUT</button>
   </div>
 </div>
 
@@ -73,34 +79,63 @@
   .results {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    border-top: 1px solid rgba(148, 163, 184, 0.12);
-    padding-top: 1.5rem;
-    animation: fadeUp 0.4s ease-out;
+    gap: 1rem;
+    border-top: 1px solid #262626;
+    padding-top: 1.25rem;
+    animation: fadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .process-dropdown {
-    background: #071226;
-    border: 1px solid #1e293b;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: border-color 0.2s;
+  /* ✅ STYLING BANNER SYSTEM NOTICE */
+  .system-notice-box {
+    background: #171717;
+    border: 1px solid #262626;
+    border-left: 3px solid #d97706; /* Amber border accent */
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-family: 'Inter', sans-serif;
   }
-  
-  .process-dropdown[open] {
-    border-color: #334155;
+  .notice-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #e5e5e5;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .notice-icon {
+    color: #d97706;
+    font-weight: bold;
+  }
+  .notice-body {
+    font-size: 0.8rem;
+    color: #a3a3a3;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .notice-body strong {
+    color: #d4d4d4;
+    font-weight: 500;
+  }
+
+  .process-dropdown {
+    background: #171717;
+    border: 1px solid #262626;
+    border-radius: 4px;
+    overflow: hidden;
   }
 
   .dropdown-trigger {
-    padding: 0.85rem 1.25rem;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 500;
+    padding: 0.6rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #737373;
     cursor: pointer;
     user-select: none;
     display: flex;
@@ -109,196 +144,153 @@
     list-style: none;
   }
 
-  .dropdown-trigger::-webkit-details-marker {
-    display: none;
-  }
+  .dropdown-trigger::-webkit-details-marker { display: none; }
 
-  .process-dropdown[open] .chevron {
-    transform: rotate(180deg);
-  }
-
-  .chevron {
-    color: #f59e0b;
-    font-weight: bold;
-    transition: transform 0.2s ease;
-  }
+  .process-dropdown[open] .chevron { transform: rotate(180deg); }
+  .chevron { color: #737373; transition: transform 0.15s ease; }
 
   .dropdown-content {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid #1e293b;
-    background: #050c1a;
+    padding: 1rem;
+    border-top: 1px solid #262626;
+    background: #0a0a0a;
   }
 
   .progress-chain {
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 0.5rem;
   }
 
   .progress-step {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
-    background: #07172f;
-    border: 1px solid #1e293b;
-    border-radius: 16px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    transition: border-color 0.2s ease, transform 0.2s ease;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    background: #171717;
+    border: 1px solid #262626;
+    border-radius: 4px;
   }
 
-  /* ✅ MODIFIKASI: Box hasil akhir punya efek glow tipis di awal */
   .final-result-box {
-    border: 2px solid rgba(16, 185, 129, 0.15);
-    background: linear-gradient(180deg, #071c35, #07172f);
-    position: relative;
+    border-color: #262626;
+    background: #171717;
   }
 
-  /* ✅ ANIMASI BARU: Jika badge status selesai (done), aktifkan glow pulse hijau intensif */
+  /* Indikator Glow Halus Khas Claude Dev-Tools saat Selesai */
   .final-result-box:has(.progress-badge.done) {
-    border-color: #10b981;
-    animation: glowSuccess 2s infinite alternate;
-  }
-
-  @keyframes glowSuccess {
-    from { box-shadow: 0 0 4px rgba(16, 185, 129, 0.2); }
-    to { box-shadow: 0 0 16px rgba(16, 185, 129, 0.4); }
-  }
-
-  .progress-step:hover {
-    transform: translateX(1px);
-    border-color: #334155;
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.05);
   }
 
   .progress-badge {
     flex-shrink: 0;
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    background: #0f172a;
-    border: 2px solid #334155;
-    transition: transform 0.25s ease, border-color 0.25s ease;
-    font-size: 1.5rem;
+    border-radius: 4px;
+    background: #0a0a0a;
+    border: 1px solid #262626;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #737373;
+    text-transform: uppercase;
   }
 
-  .progress-badge.active {
-    border-color: #f59e0b;
-    transform: translateY(-1px);
-  }
+  .progress-badge.active { border-color: #404040; color: #e5e5e5; }
+  .progress-badge.loading { border-color: #d97706; color: #f59e0b; }
+  .progress-badge.done { border-color: rgba(16, 185, 129, 0.4); color: #10b981; }
+  .progress-badge.error { border-color: #ef4444; color: #ef4444; }
 
-  .progress-badge.loading {
-    animation: pulse-soft 1s ease-in-out infinite;
-    background: #111827;
-    border-color: #3b82f6;
-  }
-
-  .progress-badge.done {
-    border-color: #10b981;
-    background: #081f16;
-  }
-
-  .progress-badge.error {
-    border-color: #ef4444;
-    background: #2b0b0b;
-  }
-
-  .progress-content {
-    flex: 1;
-    min-width: 0;
-  }
+  .progress-content { flex: 1; min-width: 0; }
 
   .progress-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 0.95rem;
-    font-weight: 400;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #cbd5e1;
-    margin-bottom: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #737373;
+    margin-bottom: 0.4rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
 
-  /* ✅ STYLING BARU: Label teks notifikasi progress agar tegas */
   .progress-status {
     display: inline-block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
-    color: #f59e0b;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: #737373;
     margin-left: auto;
-    letter-spacing: 0.05em;
   }
 
   .progress-text {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1rem;
-    letter-spacing: 0.01em;
-    color: #e2e8f0;
-    line-height: 1.75;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: #e5e5e5;
+    line-height: 1.6;
     margin: 0;
-    font-weight: 300;
+    font-weight: 400;
     word-break: break-word;
     white-space: pre-wrap;
-    min-height: 1.75em;
   }
 
-  .progress-arrow {
-    position: relative;
-    height: 42px;
+  .progress-text::selection {
+    background: #f59e0b;
+    color: #0a0a0a;
+  }
+
+  .progress-text-log {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #a3a3a3;
+    line-height: 1.5;
     margin: 0;
-    opacity: 0.55;
   }
 
-  .progress-arrow::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    width: 0;
-    height: 100%;
-    border-left: 2px dashed #475569;
+  /* ✅ GLOBAL HIGHLIGHT INJECT STYLE: Penanda kata yang berhasil diubah oleh mesin */
+  :global(.diff-highlight) {
+    background-color: rgba(245, 158, 11, 0.15); /* Kuning amber transparan halus */
+    color: #f59e0b;
+    padding: 0.05rem 0.2rem;
+    border-radius: 3px;
+    border-bottom: 1px dashed rgba(245, 158, 11, 0.4);
+  }
+
+  :global(.diff-highlight::selection) {
+    background: #e5e5e5;
+    color: #0a0a0a;
   }
 
   .progress-arrow {
-    color: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    color: #404040;
+    text-align: center;
+    font-size: 0.8rem;
+    height: 16px;
+    line-height: 16px;
+    margin: -0.1rem 0;
   }
 
   .btn-copy {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    background: #0f172a;
-    border: 2px solid #10b981;
-    border-radius: 12px;
-    padding: 0.75rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #e5e5e5;
+    background: #171717;
+    border: 1px solid #262626;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.15s ease, color 0.15s ease;
   }
 
   .btn-copy:hover {
-    background: #111827;
-    transform: translateY(-1px);
-  }
-
-  .btn-copy:active {
-    transform: scale(0.98);
-  }
-
-  @keyframes pulse-soft {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
+    border-color: #404040;
+    color: #ffffff;
   }
 
   @media (max-width: 640px) {
-    .progress-badge { width: 40px; height: 40px; font-size: 1.2rem; }
-    .progress-step { gap: 0.75rem; padding: 0.95rem 1rem; }
-    .progress-arrow::before { height: 34px; }
+    .progress-step { padding: 0.75rem; }
   }
 </style>
