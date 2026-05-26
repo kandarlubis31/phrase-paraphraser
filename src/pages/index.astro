@@ -1,17 +1,90 @@
 ---
-
+import TranslateBox from '../components/TranslateBox.astro';
+import '../styles/global.css';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phrase Paraphraser — ID → NL → EN → ID</title>
+    <meta name="description" content="Parafrase teks Indonesia melalui jalur bahasa Belanda dan Inggris." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>✦</text></svg>" />
+  </head>
+  <body>
+    <div class="bg-layer" aria-hidden="true">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="grid-overlay"></div>
+    </div>
+
+    <main>
+      <TranslateBox />
+    </main>
+
+  </body>
 </html>
+
+<style>
+  /* Pertahankan animasi background orb kesukaan lu */
+  :root {
+    --bg: #060c18;
+  }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+  }
+
+  .orb-1 {
+    width: 500px;
+    height: 500px;
+    top: -150px;
+    left: -100px;
+    background: radial-gradient(circle, #f59e0b, transparent 70%);
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+
+  .orb-2 {
+    width: 400px;
+    height: 400px;
+    bottom: -100px;
+    right: -80px;
+    background: radial-gradient(circle, #0ea5e9, transparent 70%);
+    animation: drift 15s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(30px, 20px) scale(1.1); }
+  }
+
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(248,250,252,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+  }
+</style>

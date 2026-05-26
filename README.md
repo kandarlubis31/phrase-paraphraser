@@ -1,43 +1,106 @@
-# Astro Starter Kit: Minimal
+# Phrase Paraphraser
 
-```sh
-pnpm create astro@latest -- --template minimal
+Translate text through a chain of languages for unique paraphrasing:
+**Indonesian → Dutch → English → Indonesian**
+
+## Features
+
+- ✨ Multi-language translation chain using MyMemory API (free, no auth)
+- 🚀 Astro + Tailwind CSS for fast, minimal bundle
+- 🌐 Deployed on Vercel with serverless functions
+- 📱 Responsive design with dark theme
+- 📊 Visual step-by-step progress
+- 🎯 Character limit (500 chars)
+
+## Setup Instructions for Agent
+
+### Step 1: Create project
+```bash
+npm create astro@latest phrase-paraphraser -- --template minimal
+cd phrase-paraphraser
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+### Step 2: Copy all files
+Copy all the files from this directory into the project root:
+- `astro.config.mjs`
+- `tailwind.config.mjs`
+- `vercel.json`
+- `package.json` (update dependencies)
+- `.gitignore`
+- `src/` (all folders and files)
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+### Step 3: Install dependencies
+```bash
+npm install
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+### Step 4: Run locally
+```bash
+npm run dev
+```
+Visit `http://localhost:3000`
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+### Step 5: Deploy to Vercel
+```bash
+npm install -g vercel
+vercel login
+npm run build
+vercel --prod
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Project Structure
 
-## 🧞 Commands
+```
+src/
+├── pages/
+│   ├── index.astro           # Main page
+│   └── api/
+│       └── paraphrase.ts    # POST endpoint
+├── components/
+│   ├── TranslateBox.astro   # Main UI
+│   └── StepProgress.astro   # Chain visualization
+├── lib/
+│   └── translate.ts         # Translation logic
+└── styles/
+    └── global.css           # Tailwind + custom styles
+```
 
-All commands are run from the root of the project, from a terminal:
+## API Endpoint
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+**POST** `/api/paraphrase`
 
-## 👀 Want to learn more?
+**Request:**
+```json
+{ "text": "Your Indonesian text here" }
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+**Response:**
+```json
+{
+  "success": true,
+  "steps": [
+    { "lang": "nl", "flag": "🇳🇱", "text": "..." },
+    { "lang": "en", "flag": "🇬🇧", "text": "..." },
+    { "lang": "id", "flag": "🇮🇩", "text": "..." }
+  ],
+  "result": "Final paraphrased text"
+}
+```
+
+## Translation Chain
+
+MyMemory API endpoints:
+- `id` → `nl`: Indonesian to Dutch
+- `nl` → `en`: Dutch to English
+- `en` → `id`: English back to Indonesian
+
+## Environment
+
+No authentication needed for MyMemory API. All requests are public.
+
+## Notes
+
+- Max text length: 500 characters
+- Free API (MyMemory) - no rate limiting issues for personal use
+- Vercel serverless handles all translations on the backend
+- SSR rendering for instant results after form submission
