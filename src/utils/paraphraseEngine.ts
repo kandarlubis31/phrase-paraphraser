@@ -2,13 +2,15 @@
 
 const WORKER_URL = "https://phrase-proxy.kandarlubis31.workers.dev";
 
-// ✅ KAPSUL ANGKA UNIK SIMBOLIS: Kebal dari segala bentuk manipulasi terjemahan stasiun asing
+// ✅ KAPSUL ANGKA UNIK SIMBOLIS: Dibuat unik per kata agar pemulihan data presisi
 const SLANG_RULES = [
+  { slang: "wkwk", token: "[#900]" },
   { slang: "bro", token: "[#901]" },
   { slang: "lu", token: "[#902]" },
   { slang: "gw", token: "[#903]" },
   { slang: "sikat", token: "[#904]" },
-  { slang: "gan", token: "[#901]" } // Konversi paksa otomatis dari 'gan' kembali ke 'bro'
+  { slang: "kocak", token: "[#905]" },
+  { slang: "gan", token: "[#906]" }
 ];
 
 export async function translate(text: string, src: string, tgt: string): Promise<string> {
@@ -46,10 +48,15 @@ export async function translate(text: string, src: string, tgt: string): Promise
         return match === "___LU___" ? "[#902]" : "[#903]";
       });
 
-      // Kembalikan token angka ke bentuk teks aslinya secara global
+      // Kembalikan token angka ke bentuk teks aslinya secara global dengan escape regex aman
       SLANG_RULES.forEach(rule => {
-        const regex = new RegExp(rule.token.replace("[", "\\[").replace("]", "\\]"), "g");
-        resultText = resultText.replace(regex, rule.slang);
+        // Amankan karakter [ dan ] agar dibaca sebagai string literal di constructor RegExp
+        const safeToken = rule.token.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(safeToken, "g");
+        
+        // Atur konversi balik khusus: 'gan' otomatis dipulihkan menjadi 'bro' sesuai kebutuhan UI lu
+        const replacement = rule.slang === "gan" ? "bro" : rule.slang;
+        resultText = resultText.replace(regex, replacement);
       });
     }
 
