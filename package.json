@@ -10,7 +10,7 @@
     "deploy": "vercel --prod"
   },
   "engines": {
-    "node": "22.x"
+    "node": "20.x"
   },
   "dependencies": {
     "astro": "^4.16.19",
