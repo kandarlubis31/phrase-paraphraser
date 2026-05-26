@@ -94,7 +94,7 @@
   .system-notice-box {
     background: #171717;
     border: 1px solid #262626;
-    border-left: 3px solid #d97706; /* Amber border accent */
+    border-left: 3px solid #d97706;
     border-radius: 4px;
     padding: 0.75rem 1rem;
     font-family: 'Inter', sans-serif;
@@ -176,7 +176,6 @@
     background: #171717;
   }
 
-  /* Indikator Glow Halus Khas Claude Dev-Tools saat Selesai */
   .final-result-box:has(.progress-badge.done) {
     border-color: rgba(16, 185, 129, 0.4);
     box-shadow: 0 0 12px rgba(16, 185, 129, 0.05);
@@ -226,13 +225,14 @@
 
   .progress-text {
     font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: #e5e5e5;
-    line-height: 1.6;
+    line-height: 1.7;
     margin: 0;
     font-weight: 400;
     word-break: break-word;
-    white-space: pre-wrap;
+    /* ✅ FIX: Gunakan normal layout untuk merapatkan spasi patahan kata akibat streaming */
+    white-space: normal; 
   }
 
   .progress-text::selection {
@@ -248,13 +248,17 @@
     margin: 0;
   }
 
-  /* ✅ GLOBAL HIGHLIGHT INJECT STYLE: Penanda kata yang berhasil diubah oleh mesin */
+  /* ✅ FIX STYLE HIGHLIGHT: Dibuat inline-block rapat dengan kompresi margin-padding agar rata paragraf */
   :global(.diff-highlight) {
-    background-color: rgba(245, 158, 11, 0.15); /* Kuning amber transparan halus */
+    background-color: rgba(245, 158, 11, 0.12);
     color: #f59e0b;
-    padding: 0.05rem 0.2rem;
-    border-radius: 3px;
-    border-bottom: 1px dashed rgba(245, 158, 11, 0.4);
+    padding: 0.02rem 0.1rem;
+    margin: 0;
+    display: inline;
+    border-radius: 2px;
+    border-bottom: 1px dashed rgba(245, 158, 11, 0.35);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
   :global(.diff-highlight::selection) {
