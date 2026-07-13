@@ -1,6 +1,6 @@
 // src/utils/paraphraseEngine.ts
 
-const WORKER_URL = "https://phrase-proxy.kandarlubis31.workers.dev";
+const WORKER_URL = import.meta.env.PUBLIC_WORKER_URL || "https://phrase-proxy.kandarlubis31.workers.dev";
 
 // ✅ KAPSUL ANGKA UNIK SIMBOLIS: Dibuat unik per kata agar pemulihan data presisi
 const SLANG_RULES = [
