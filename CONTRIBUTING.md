@@ -144,14 +144,15 @@ Biar nggak nyasar pas nyari file buat diedit:
 | File / Folder | Status | Deskripsi |
 |---------------|--------|-----------|
 | `src/utils/paraphraseEngine.ts` | ⭐ Active | Engine utama: translate, diff, validasi, cooldown |
-| `src/components/TranslateBox.astro` | ⭐ Active | Komponen utama (UI + semua client logic) |
-| `src/components/AppHeader.astro` | Active | Header + live clock |
+| `src/client/paraphraseController.ts` | ⭐ Active | Orchestrator UI: init, pipeline, cancel, state |
+| `src/client/streamRenderer.ts` | Active | Streaming output (token → DOM) |
+| `src/client/dom.ts` | Active | DOM element cache |
+| `src/client/storage.ts` | Active | localStorage/sessionStorage helpers |
+| `src/components/TranslateBox.astro` | ⭐ Active | Komponen utama (script cuma 5 baris!) |
+| `src/components/AppHeader.astro` | Active | Header + live clock + mode badge |
 | `src/components/EditorialFeatures.astro` | Active | Highlight fitur |
 | `src/components/FlowVisual.astro` | Active | Visualisasi pipeline |
-| `src/components/ResultProgress.astro` | Active | Panel hasil & intermediate logs |
-| `src/components/StepProgress.astro` | ⚠️ Legacy | Tidak dipakai, siap dihapus/refactor |
-| `src/lib/translate.ts` | ⚠️ Legacy | MyMemory API client lama, tidak dipakai |
-| `src/pages/api/paraphrase.ts` | ⚠️ Legacy | API endpoint lama, tidak dipakai |
+| `src/components/ResultProgress.astro` | Active | Panel hasil + skeleton + empty state |
 
 ---
 
@@ -298,14 +299,15 @@ So you don't get lost looking for the right file to edit:
 | File / Folder | Status | Description |
 |---------------|--------|-------------|
 | `src/utils/paraphraseEngine.ts` | ⭐ Active | Core engine: translate, diff, validation, cooldown |
-| `src/components/TranslateBox.astro` | ⭐ Active | Main component (UI + all client logic) |
-| `src/components/AppHeader.astro` | Active | Header + live clock |
+| `src/client/paraphraseController.ts` | ⭐ Active | UI orchestrator: init, pipeline, cancel, state |
+| `src/client/streamRenderer.ts` | Active | Streaming output (token → DOM) |
+| `src/client/dom.ts` | Active | DOM element cache |
+| `src/client/storage.ts` | Active | localStorage/sessionStorage helpers |
+| `src/components/TranslateBox.astro` | ⭐ Active | Main component (only 5 lines of script!) |
+| `src/components/AppHeader.astro` | Active | Header + live clock + mode badge |
 | `src/components/EditorialFeatures.astro` | Active | Feature highlights |
 | `src/components/FlowVisual.astro` | Active | Pipeline visualization |
-| `src/components/ResultProgress.astro` | Active | Results panel & intermediate logs |
-| `src/components/StepProgress.astro` | ⚠️ Legacy | Unused, ready for deletion/refactor |
-| `src/lib/translate.ts` | ⚠️ Legacy | Old MyMemory API client, unused |
-| `src/pages/api/paraphrase.ts` | ⚠️ Legacy | Old API endpoint, unused |
+| `src/components/ResultProgress.astro` | Active | Results panel + skeleton + empty state |
 
 ---
 

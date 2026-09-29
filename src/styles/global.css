@@ -1,18 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html { scroll-behavior: smooth; }
 
+/* Respect OS-level accessibility preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: #f59e0b33 transparent;
+  scrollbar-color: rgb(245 158 11 / 0.2) transparent;
 }
 
 *::-webkit-scrollbar { width: 6px; }
 *::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: #f59e0b55; border-radius: 3px; }
+*::-webkit-scrollbar-thumb { background: rgb(245 158 11 / 0.33); border-radius: 3px; }
 
-::selection { background: #f59e0b33; color: #f8fafc; }
+::selection { background: rgb(245 158 11 / 0.2); color: theme('colors.terminal.white'); }
+
+/* Cross-component utility: used by JS to toggle visibility of elements
+   in ResultProgress, AppHeader, and TranslateBox. Tailwind's built-in
+   .hidden lacks !important and gets overridden by inline display styles. */
+.hidden { display: none !important; }

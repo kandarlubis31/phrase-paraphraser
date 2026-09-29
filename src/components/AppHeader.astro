@@ -1,103 +1,40 @@
 ---
 // src/components/AppHeader.astro
----
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<header class="app-header">
-  <div class="meta-indicator">
-    <div style="display:flex;align-items:center;gap:0.4rem;">
-      <span class="status-dot"></span> 
+const apiMode = import.meta.env.PUBLIC_API_MODE || 'on';
+const modeLabel = apiMode === 'off' ? 'LOCAL' : 'CLOUD';
+const modeColors = apiMode === 'off'
+  ? 'text-success border-success/40 bg-success/10'
+  : 'text-accent border-accent/40 bg-accent/10';
+---
+
+<header class="relative flex flex-col items-start gap-1.5 w-full max-w-[720px] mx-auto pb-4 border-b border-terminal-border text-left">
+  <div class="w-full font-mono text-xs text-terminal-dim flex items-center justify-between tracking-[0.05em]">
+    <div class="flex items-center gap-1.5">
+      <span class="status-dot inline-block w-1.5 h-1.5 bg-success rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span> 
       <span>STATUS: ACTIVE_RUNNING</span>
-      <span id="liveClock" class="flag-mono-header"></span>
+      <span id="liveClock" class="text-terminal-dim bg-terminal-surface border border-terminal-border py-px px-1 rounded-[3px] text-[0.7rem] ml-1.5"></span>
+      <span id="modeBadge" class="ml-1.5 py-px px-1.5 rounded-[3px] text-[0.65rem] font-medium tracking-[0.03em] border {modeColors}">{modeLabel}</span>
     </div>
   </div>
-  <h1 class="app-title">Phrase Paraphraser</h1>
-  <p class="app-subtitle">
+  <h1 class="font-sans font-medium text-terminal-bright tracking-[-0.02em] leading-tight m-0" style="font-size: clamp(1.6rem, 4vw, 2.2rem);">Phrase Paraphraser</h1>
+  <p class="font-mono text-xs text-terminal-muted font-normal m-0 leading-relaxed">
     Recursive multi-language loop execution pipeline.
   </p>
 
-  <div id="toastNotification" class="toast-toast hidden"></div>
+  <div id="toastNotification" class="toast-toast hidden font-mono text-xs rounded" role="status" aria-live="polite"></div>
 </header>
 
 <style>
-  .app-header {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-    position: relative;
-    width: 100%;
-    max-width: 720px;
-    margin: 0 auto;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #262626;
-  }
-
-  .meta-indicator {
-    width: 100%;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: #737373;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    letter-spacing: 0.05em;
-  }
-
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    background-color: #10b981;
-    border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-  }
-
-  /* Styling khusus minimalis untuk jam di area header atas */
-  .flag-mono-header {
-    color: #737373;
-    background: #171717;
-    border: 1px solid #262626;
-    padding: 0.05rem 0.3rem;
-    border-radius: 3px;
-    font-size: 0.7rem;
-    margin-left: 0.4rem;
-  }
-
-  .app-title {
-    font-family: 'Inter', sans-serif;
-    font-size: clamp(1.6rem, 4vw, 2.2rem);
-    font-weight: 500;
-    color: #e5e5e5;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    margin: 0;
-  }
-
-  .app-subtitle {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: #525252;
-    font-weight: 400;
-    margin: 0;
-    line-height: 1.5;
-  }
-
   .toast-toast {
     position: fixed;
     top: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(23, 23, 23, 0.85);
-    border: 1px solid #d97706;
-    color: #f59e0b;
+    background: rgb(23 23 23 / 0.85);
+    border: 1px solid theme('colors.accent.dark');
+    color: theme('colors.accent.DEFAULT');
     padding: 0.5rem 1rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    border-radius: 4px;
     z-index: 9999;
     pointer-events: none;
     backdrop-filter: blur(8px);
@@ -105,21 +42,10 @@
     animation: toastFadeInOut 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .toast-toast.hidden {
-    display: none !important;
-  }
-
   @keyframes toastFadeInOut {
-    0% { opacity: 0; transform: translate(-50%, -5px); }
-    15% { opacity: 1; transform: translate(-50%, 0); }
-    85% { opacity: 1; transform: translate(-50%, 0); }
+    0%   { opacity: 0; transform: translate(-50%, -5px); }
+    15%  { opacity: 1; transform: translate(-50%, 0); }
+    85%  { opacity: 1; transform: translate(-50%, 0); }
     100% { opacity: 0; transform: translate(-50%, -5px); }
-  }
-
-  @media (max-width: 640px) {
-    .app-header {
-      align-items: flex-start;
-      text-align: left;
-    }
   }
 </style>

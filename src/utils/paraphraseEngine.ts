@@ -1,70 +1,114 @@
-// src/utils/paraphraseEngine.ts
+// src/utils/paraphraseEngine.ts — Translation engine + LCS diff + validation + cooldown
 
+import { lockSlang, unlockSlang } from './slang';
+
+// ── Configuration ─────────────────────────────────────────────────────
+
+const API_MODE = import.meta.env.PUBLIC_API_MODE || "on";
 const WORKER_URL = import.meta.env.PUBLIC_WORKER_URL || "https://phrase-proxy.kandarlubis31.workers.dev";
+const LIBRETRANSLATE_URL = import.meta.env.PUBLIC_LIBRETRANSLATE_URL || "http://localhost:5000";
 
-// ✅ KAPSUL ANGKA UNIK SIMBOLIS: Dibuat unik per kata agar pemulihan data presisi
-const SLANG_RULES = [
-  { slang: "wkwk", token: "[#900]" },
-  { slang: "bro", token: "[#901]" },
-  { slang: "lu", token: "[#902]" },
-  { slang: "gw", token: "[#903]" },
-  { slang: "sikat", token: "[#904]" },
-  { slang: "kocak", token: "[#905]" },
-  { slang: "gan", token: "[#906]" }
-];
+// ── Shared fetch helpers ──────────────────────────────────────────────
 
-export async function translate(text: string, src: string, tgt: string): Promise<string> {
-  let processedText = text;
-
-  // 1. Kunci kata slang menjadi Kapsul Angka saat berangkat dari stasiun Indonesia
-  if (src === "id") {
-    SLANG_RULES.forEach(rule => {
-      const regex = new RegExp(`\\b${rule.slang}\\b`, "gi");
-      processedText = processedText.replace(regex, rule.token);
-    });
+async function safeParseJSON(res: Response): Promise<any> {
+  const text = await res.text();
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) {
+    throw new Error(`Unexpected response (${res.status}): ${text.slice(0, 200)}`);
   }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
-  try {
-    const res = await fetch(`${WORKER_URL}?t=${Date.now()}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: processedText, src, tgt }),
-      signal: controller.signal,
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    
-    let resultText = data.result;
-
-    // 2. Bongkar kembali kapsul angka saat mendarat di stasiun akhir Indonesia
-    if (tgt === "id") {
-      // Sapu bersih sisa sampah kebocoran interpolasi mesin asing jika sempat lolos atau berubah huruf
-      resultText = resultText.replace(/___BRUSH___|___BORSTEL___|___SIKAT___|brush|borstel/gi, "[#904]");
-      resultText = resultText.replace(/___BRO___|brother|broer/gi, "[#901]");
-      resultText = resultText.replace(/___LU___|___GW___/gi, (match) => {
-        return match === "___LU___" ? "[#902]" : "[#903]";
-      });
-
-      // Kembalikan token angka ke bentuk teks aslinya secara global dengan escape regex aman
-      SLANG_RULES.forEach(rule => {
-        // Amankan karakter [ dan ] agar dibaca sebagai string literal di constructor RegExp
-        const safeToken = rule.token.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const regex = new RegExp(safeToken, "g");
-        
-        // Atur konversi balik khusus: 'gan' otomatis dipulihkan menjadi 'bro' sesuai kebutuhan UI lu
-        const replacement = rule.slang === "gan" ? "bro" : rule.slang;
-        resultText = resultText.replace(regex, replacement);
-      });
-    }
-
-    return resultText;
-  } finally {
-    clearTimeout(timer);
+  try { return JSON.parse(text); } catch {
+    throw new Error(`Invalid JSON (${res.status}): ${text.slice(0, 200)}`);
   }
 }
+
+function createAbortController(signal?: AbortSignal): { controller: AbortController; cleanup: () => void } {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+
+  // Store handler ref so cleanup() can deregister it (prevents listener leak
+  // across the pipeline's 3 sequential translate() calls sharing one signal).
+  const onAbort = () => controller.abort(signal?.reason);
+
+  if (signal) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+    } else {
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+  }
+
+  return {
+    controller,
+    cleanup: () => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', onAbort);
+    },
+  };
+}
+
+// ── API Adapters ──────────────────────────────────────────────────────
+
+async function fetchViaLibreTranslate(text: string, src: string, tgt: string, signal?: AbortSignal, retries = 1): Promise<string> {
+  const { controller, cleanup } = createAbortController(signal);
+  try {
+    const res = await fetch(`${LIBRETRANSLATE_URL}/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q: text, source: src, target: tgt, format: "text" }),
+      signal: controller.signal,
+    });
+    const data = await safeParseJSON(res);
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data.translatedText;
+  } catch (err: unknown) {
+    // Retry once on transient network errors (DNS blip, connection reset).
+    // TypeError is thrown by fetch() for network failures only.
+    // Don't retry on AbortError (user cancel / timeout) or HTTP errors.
+    if (retries > 0 && err instanceof TypeError) {
+      return fetchViaLibreTranslate(text, src, tgt, signal, retries - 1);
+    }
+    throw err;
+  } finally {
+    cleanup();
+  }
+}
+
+async function fetchViaWorker(text: string, src: string, tgt: string, signal?: AbortSignal, retries = 1): Promise<string> {
+  const { controller, cleanup } = createAbortController(signal);
+  try {
+    // POST requests are not cached by browsers or standard HTTP intermediaries,
+    // so no cache-busting query parameter is needed.
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, src, tgt }),
+      signal: controller.signal,
+    });
+    const data = await safeParseJSON(res);
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data.result;
+  } catch (err: unknown) {
+    // Retry once on transient network errors only (fetch() throws TypeError).
+    if (retries > 0 && err instanceof TypeError) {
+      return fetchViaWorker(text, src, tgt, signal, retries - 1);
+    }
+    throw err;
+  } finally {
+    cleanup();
+  }
+}
+
+// ── translate() — Orchestrator ───────────────────────────────────────
+
+export async function translate(text: string, src: string, tgt: string, signal?: AbortSignal): Promise<string> {
+  const processedText = src === "id" ? lockSlang(text) : text;
+  const resultText = API_MODE === "off"
+    ? await fetchViaLibreTranslate(processedText, src, tgt, signal)
+    : await fetchViaWorker(processedText, src, tgt, signal);
+  return tgt === "id" ? unlockSlang(resultText) : resultText;
+}
+
+// ── Tokenizer ─────────────────────────────────────────────────────────
 
 type TokenType = 'word' | 'whitespace' | 'punctuation';
 
@@ -74,42 +118,52 @@ interface Token {
   lowerValue: string;
 }
 
+const PUNCT_REGEX = /[.,\/#!$%\^&\*;:{}=\-_`~()?"'—\[\]<>!’]/;
+
 function tokenizeText(text: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
-  
+
   while (i < text.length) {
     const char = text[i];
-    
+
     if (/\s/.test(char)) {
       let ws = '';
-      while (i < text.length && /\s/.test(text[i])) {
-        ws += text[i];
-        i++;
-      }
+      while (i < text.length && /\s/.test(text[i])) ws += text[i++];
       tokens.push({ value: ws, type: 'whitespace', lowerValue: ws });
-    }
-    else if (/[.,\/#!$%\^&\*;:{}=\-_`~()?"'—\[\]<>!’]/.test(char)) {
+    } else if (PUNCT_REGEX.test(char)) {
       tokens.push({ value: char, type: 'punctuation', lowerValue: char });
       i++;
-    }
-    else {
+    } else {
       let word = '';
-      while (i < text.length && !/\s/.test(text[i]) && !/[.,\/#!$%\^&\*;:{}=\-_`~()?"'—\[\]<>!’]/.test(text[i])) {
-        word += text[i];
-        i++;
-      }
+      while (i < text.length && !/\s/.test(text[i]) && !PUNCT_REGEX.test(text[i])) word += text[i++];
       tokens.push({ value: word, type: 'word', lowerValue: word.toLowerCase() });
     }
   }
   return tokens;
 }
 
+// ── HTML Escape (idempotent) ──────────────────────────────────────────
+
+function escapeHtml(text: string): string {
+  const unescaped = text
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+  return unescaped
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// ── LCS Diff ──────────────────────────────────────────────────────────
+
+const MAX_LCS_CELLS = 50_000;
+
 function computeLCSTable(origWords: Token[], finalWords: Token[]): number[][] {
   const m = origWords.length;
   const n = finalWords.length;
+  if (m * n > MAX_LCS_CELLS) return [];
+
   const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
       if (origWords[i - 1].lowerValue === finalWords[j - 1].lowerValue) {
@@ -122,39 +176,22 @@ function computeLCSTable(origWords: Token[], finalWords: Token[]): number[][] {
   return dp;
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&' + 'amp;')
-    .replace(/</g, '&' + 'lt;')
-    .replace(/>/g, '&' + 'gt;')
-    .replace(/"/g, '&' + 'quot;')
-    .replace(/'/g, '&' + '#039;');
-}
-
-export function validateInputText(text: string): { valid: boolean; error?: string } {
-  const trimmed = text.trim();
-  if (!trimmed) return { valid: false, error: "Teks sumber tidak boleh kosong." };
-
-  const words = trimmed.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'—\[\]<>!’]/g, " ").split(/\s+/).filter(w => w.length > 0);
-  
-  if (words.length < 2) {
-    return { valid: false, error: "VALIDATION_FAILED: Input terlalu pendek. Masukkan minimal 2 kata." };
-  }
-
-  const hasVowels = /[aeiouyAEIOUY]/i.test(trimmed);
-  if (!hasVowels && trimmed.length > 10) {
-    return { valid: false, error: "VALIDATION_FAILED: Deteksi payload tidak valid (Karakter Acak)." };
-  }
-
-  return { valid: true };
-}
+// ── Highlight output ──────────────────────────────────────────────────
 
 interface HighlightOutput {
   html: string;
-  metrics: {
-    sizeBytes: number;
-    durationMs: number;
-  };
+  metrics: { sizeBytes: number; durationMs: number };
+}
+
+function buildHighlightedHTML(tokens: Token[], highlightSet: Set<Token> | null): string {
+  let html = '';
+  for (const token of tokens) {
+    const escaped = escapeHtml(token.value);
+    html += (token.type === 'word' && highlightSet && !highlightSet.has(token))
+      ? `<span class="diff-highlight">${escaped}</span>`
+      : escaped;
+  }
+  return html;
 }
 
 export function highlightDifferences(originalText: string, finalText: string, startTime: number): HighlightOutput {
@@ -163,67 +200,83 @@ export function highlightDifferences(originalText: string, finalText: string, st
 
   if (!originalText && !finalText) return { html: '', metrics: { sizeBytes, durationMs } };
   if (!originalText) return { html: `<span class="diff-highlight">${escapeHtml(finalText)}</span>`, metrics: { sizeBytes, durationMs } };
-  
+
   const allOrigTokens = tokenizeText(originalText);
   const allFinalTokens = tokenizeText(finalText);
-  
   const origWords = allOrigTokens.filter(t => t.type === 'word');
   const finalWords = allFinalTokens.filter(t => t.type === 'word');
-  
   const dp = computeLCSTable(origWords, finalWords);
-  const matchedFinalWords = new Set<Token>();
-  
-  let i = origWords.length;
-  let j = finalWords.length;
-  
+
+  if (dp.length === 0) {
+    return { html: buildHighlightedHTML(allFinalTokens, new Set()), metrics: { sizeBytes, durationMs } };
+  }
+
+  const matched = new Set<Token>();
+  let i = origWords.length, j = finalWords.length;
   while (i > 0 && j > 0) {
     if (origWords[i - 1].lowerValue === finalWords[j - 1].lowerValue) {
-      matchedFinalWords.add(finalWords[j - 1]);
+      matched.add(finalWords[--j]);
       i--;
-      j--;
     } else if (dp[i - 1][j] >= dp[i][j - 1]) {
       i--;
     } else {
       j--;
     }
   }
-  
-  let html = '';
-  for (const token of allFinalTokens) {
-    if (token.type === 'word') {
-      if (!matchedFinalWords.has(token)) {
-        html += `<span class="diff-highlight">${escapeHtml(token.value)}</span>`;
-      } else {
-        html += escapeHtml(token.value);
-      }
-    } else {
-      html += escapeHtml(token.value);
-    }
-  }
-  
-  return { html, metrics: { sizeBytes, durationMs } };
+
+  return { html: buildHighlightedHTML(allFinalTokens, matched), metrics: { sizeBytes, durationMs } };
 }
 
+// ── Input Validation ──────────────────────────────────────────────────
+
+export function validateInputText(text: string): { valid: boolean; error?: string } {
+  const trimmed = text.trim();
+  if (!trimmed) return { valid: false, error: "Teks sumber tidak boleh kosong." };
+  if (trimmed.length > 3000) return { valid: false, error: "VALIDATION_FAILED: Input terlalu panjang. Maksimal 3000 karakter." };
+
+  const words = trimmed.replace(PUNCT_REGEX, " ").split(/\s+/).filter(w => w.length > 0);
+  if (words.length < 2) return { valid: false, error: "VALIDATION_FAILED: Input terlalu pendek. Masukkan minimal 2 kata." };
+
+  const hasLetters = /\p{L}/u.test(trimmed);
+  if (!hasLetters && trimmed.length > 10) return { valid: false, error: "VALIDATION_FAILED: Deteksi payload tidak valid (Karakter Acak)." };
+
+  return { valid: true };
+}
+
+// ── Cooldown ──────────────────────────────────────────────────────────
+
 export function initializeCooldown(
-  buttonEl: HTMLButtonElement, 
-  labelEl: HTMLSpanElement, 
+  buttonEl: HTMLButtonElement | null,
+  labelEl: HTMLSpanElement | null,
   duration: number,
   onComplete: () => void
-) {
+): () => void {
+  if (!buttonEl || !labelEl || duration <= 0) { onComplete(); return () => {}; }
+
   let timeLeft = duration;
   buttonEl.disabled = true;
-  if (labelEl) labelEl.textContent = `COOLDOWN_${timeLeft.toString().padStart(2, '0')}s`;
-  
+  labelEl.textContent = `COOLDOWN_${timeLeft.toString().padStart(2, '0')}s`;
+
   const interval = setInterval(() => {
     timeLeft--;
-    if (labelEl) labelEl.textContent = `COOLDOWN_${timeLeft.toString().padStart(2, '0')}s`;
-    
+    labelEl.textContent = `COOLDOWN_${timeLeft.toString().padStart(2, '0')}s`;
+
+    // Urgency pulse in last 3 seconds
+    if (timeLeft <= 3 && timeLeft > 0) {
+      labelEl.style.color = '#ef4444';
+      labelEl.style.opacity = (timeLeft % 2 === 0) ? '0.6' : '1';
+    }
+
     if (timeLeft <= 0) {
       clearInterval(interval);
-      if (labelEl) labelEl.textContent = "EXECUTE PARAPHRASE";
-      buttonEl.disabled = false;
+      labelEl.textContent = "EXECUTE PARAPHRASE";
+      labelEl.style.color = '';
+      labelEl.style.opacity = '';
+      buttonEl!.disabled = false;
       sessionStorage.removeItem("paraphrase_cooldown");
       onComplete();
     }
   }, 1000);
+
+  return () => clearInterval(interval);
 }

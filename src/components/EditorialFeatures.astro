@@ -1,65 +1,21 @@
 ---
 // src/components/EditorialFeatures.astro
 ---
-<section class="features">
-  <div class="feature-item">
-    <span class="index">[01]</span> <strong>STRUCT_REFACTOR:</strong> Mengubah susunan kalimat habis-habisan biar lolos cek plagiasi, tanpa ngubah makna aslinya.
+<section class="features flex flex-col gap-2 w-full max-w-[720px] mx-auto my-4 mb-8 px-0 box-border">
+  <div class="feature-item bg-transparent text-terminal-body font-sans text-sm leading-relaxed font-normal">
+    <span class="index font-mono text-terminal-dim text-[0.8rem] mr-1">[01]</span> <strong class="inline-block mr-2 text-terminal-bright font-mono text-[0.8rem] font-medium tracking-[0.02em]">STRUCT_REFACTOR:</strong> Mengubah susunan kalimat habis-habisan biar lolos cek plagiasi, tanpa ngubah makna aslinya.
   </div>
-  <div class="feature-item">
-    <span class="index">[02]</span> <strong>CONTEXT_LOCK:</strong> Nggak cuma ganti kata, tapi nge-lock gaya bahasa dan nadanya biar hasilnya tetap enak dibaca.
+  <div class="feature-item bg-transparent text-terminal-body font-sans text-sm leading-relaxed font-normal">
+    <span class="index font-mono text-terminal-dim text-[0.8rem] mr-1">[02]</span> <strong class="inline-block mr-2 text-terminal-bright font-mono text-[0.8rem] font-medium tracking-[0.02em]">CONTEXT_LOCK:</strong> Nggak cuma ganti kata, tapi nge-lock gaya bahasa dan nadanya biar hasilnya tetap enak dibaca.
   </div>
-  <div class="feature-item">
-    <span class="index">[03]</span> <strong>PIPELINE_SYNC:</strong> Proses berantai ID→NL→EN→ID yang jalan otomatis, dengan notifikasi real-time di tiap tahapannya.
+  <div class="feature-item bg-transparent text-terminal-body font-sans text-sm leading-relaxed font-normal">
+    <span class="index font-mono text-terminal-dim text-[0.8rem] mr-1">[03]</span> <strong class="inline-block mr-2 text-terminal-bright font-mono text-[0.8rem] font-medium tracking-[0.02em]">PIPELINE_SYNC:</strong> Proses berantai ID→NL→EN→ID yang jalan otomatis, dengan notifikasi real-time di tiap tahapannya.
   </div>
 </section>
 
 <style>
-  .features {
-    width: 100%;
-    max-width: 720px;
-    margin: 1rem auto 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  .feature-item {
-    background: transparent;
-    color: #a3a3a3; /* Abu-abu redup khas Claude/DevTools */
-    font-family: 'Inter', sans-serif;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    font-weight: 400;
-  }
-
-  .index {
-    font-family: 'JetBrains Mono', monospace;
-    color: #737373;
-    font-size: 0.8rem;
-    margin-right: 0.25rem;
-  }
-
-  .feature-item strong {
-    display: inline-block;
-    margin-right: 0.5rem;
-    color: #e5e5e5; /* Putih netral terang */
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-
   @media (max-width: 640px) {
-    .features {
-      margin: 1rem auto 1.5rem;
-      gap: 0.6rem;
-    }
-
-    .feature-item {
-      font-size: 0.8rem;
-      line-height: 1.5;
-    }
+    .features { margin: 1rem auto 1.5rem; gap: 0.6rem; }
+    .feature-item { font-size: 0.8rem; line-height: 1.5; }
   }
 </style>

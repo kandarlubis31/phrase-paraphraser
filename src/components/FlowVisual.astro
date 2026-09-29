@@ -1,112 +1,33 @@
 ---
 // src/components/FlowVisual.astro
 ---
-<aside class="flow-card" aria-hidden="true">
-  <div class="flow-card-inner">
-    <div class="flow-card-title">> ENGINE_PIPELINE</div>
-    <div class="flow-visual small">
-      <span class="flow-node node-id">id</span>
-      <span class="flow-connector">-></span>
-      <span class="flow-node node-nl">nl</span>
-      <span class="flow-connector">-></span>
-      <span class="flow-node node-en">en</span>
-      <span class="flow-connector muted"><=</span>
-      <span class="flow-node node-final final">id_final</span>
+<aside class="w-full max-w-[720px] mx-auto mb-6 box-border p-0" aria-hidden="true">
+  <div class="flow-card-inner bg-terminal-surface border border-terminal-border py-2.5 px-4 rounded-md flex items-center justify-between">
+    <div class="font-mono text-[0.72rem] text-terminal-dim tracking-[0.05em]">> ENGINE_PIPELINE</div>
+    <div class="flow-visual flex items-center gap-1.5 font-mono">
+      <span class="flow-node node-id bg-terminal-bg border border-terminal-border rounded text-terminal-body font-normal text-[0.75rem] py-0.5 px-1.5">id</span>
+      <span class="flow-connector text-terminal-border-hover text-[0.8rem]">-></span>
+      <span class="flow-node node-nl bg-terminal-bg border border-terminal-border rounded text-terminal-body font-normal text-[0.75rem] py-0.5 px-1.5">nl</span>
+      <span class="flow-connector text-terminal-border-hover text-[0.8rem]">-></span>
+      <span class="flow-node node-en bg-terminal-bg border border-terminal-border rounded text-terminal-body font-normal text-[0.75rem] py-0.5 px-1.5">en</span>
+      <span class="flow-connector muted text-accent-dark text-[0.8rem]"><=</span>
+      <span class="flow-node node-final final border-success/30 text-success bg-success/5 rounded font-normal text-[0.75rem] py-0.5 px-1.5">id_final</span>
     </div>
   </div>
 </aside>
 
 <style>
-  .flow-card { 
-    width: 100%;
-    max-width: 720px; 
-    margin: 0 auto 1.5rem; 
-    box-sizing: border-box;
-    padding: 0;
-  }
-  
-  .flow-card-inner { 
-    background: #171717; 
-    border: 1px solid #262626; 
-    padding: 0.6rem 1rem; 
-    border-radius: 6px; 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .flow-card-title { 
-    font-family: 'JetBrains Mono', monospace; 
-    font-size: 0.72rem; 
-    color: #737373; 
-    letter-spacing: 0.05em; 
-  }
-  
-  .flow-visual { 
-    display: flex; 
-    align-items: center; 
-    gap: 0.4rem; 
-    font-family: 'JetBrains Mono', monospace;
-  }
-  
-  .flow-visual.small .flow-node { 
-    font-size: 0.75rem; 
-    padding: 0.15rem 0.4rem; 
-  }
-  
-  .flow-node { 
-    background: #0a0a0a; 
-    border: 1px solid #262626; 
-    border-radius: 4px; 
-    color: #a3a3a3; 
-    font-weight: 400; 
-  }
-  
-  .flow-node.final { 
-    border-color: rgba(16, 185, 129, 0.3); 
-    color: #10b981;
-    background: rgba(16, 185, 129, 0.04);
-  }
-  
-  .flow-connector { 
-    color: #404040; 
-    font-size: 0.8rem;
-  }
-  
-  .flow-connector.muted { 
-    color: #d97706; 
-  }
-
-  /* Processing State: Animasi kedip flat terminal tanpa pergeseran posisi / shadow */
   @keyframes fv-blink {
-    0%, 100% { opacity: 0.4; border-color: #262626; color: #a3a3a3; }
-    50% { opacity: 1; border-color: #d97706; color: #f59e0b; }
+    0%, 100% { opacity: 0.4; border-color: theme('colors.terminal.border'); color: theme('colors.terminal.body'); }
+    50%      { opacity: 1;   border-color: theme('colors.accent.dark');     color: theme('colors.accent.DEFAULT'); }
   }
 
-  .flow-node.processing {
-    animation: fv-blink 1s steps(1) infinite;
-  }
+  .flow-node.processing { animation: fv-blink 1s steps(1) infinite; }
 
   @media (max-width: 640px) {
-    .flow-card-inner { 
-      flex-direction: column; 
-      gap: 0.5rem; 
-      align-items: flex-start;
-      padding: 0.6rem 0.8rem;
-    }
-
-    .flow-visual { 
-      gap: 0.25rem;
-      flex-wrap: wrap;
-    }
-
-    .flow-visual.small .flow-node { 
-      font-size: 0.7rem; 
-      padding: 0.1rem 0.3rem; 
-    }
-
-    .flow-connector { 
-      font-size: 0.75rem; 
-    }
+    .flow-card-inner { flex-direction: column; gap: 0.5rem; align-items: flex-start; padding: 0.6rem 0.8rem; }
+    .flow-visual { gap: 0.25rem; flex-wrap: wrap; }
+    .flow-visual .flow-node { font-size: 0.7rem; padding: 0.1rem 0.3rem; }
+    .flow-connector { font-size: 0.75rem; }
   }
 </style>

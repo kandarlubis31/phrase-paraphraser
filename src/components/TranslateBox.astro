@@ -6,768 +6,162 @@ import FlowVisual from "./FlowVisual.astro";
 import ResultProgress from "./ResultProgress.astro";
 ---
 
-<div class="app-wrapper">
+<div class="app-wrapper flex flex-col items-center py-12 px-6 gap-5 font-sans text-terminal-body bg-terminal-bg min-h-screen">
   <AppHeader />
 
   <EditorialFeatures />
 
   <FlowVisual />
 
-  <div class="card-main">
-    <div id="linearProgress" class="linear-progress hidden">
+  <div class="card-main w-full max-w-[720px] bg-terminal-surface border border-terminal-border rounded-md p-6 flex flex-col gap-5 relative shadow-none">
+    <div id="linearProgress" class="linear-progress hidden rounded-t-md">
       <div class="linear-bar"></div>
     </div>
 
-    <div class="input-section">
-      <div class="section-label">
-        <div style="display:flex;align-items:center;gap:0.4rem;">
-          <span class="flag-mono">[id_ID]</span>
+    <div class="input-section flex flex-col gap-2">
+      <div class="section-label flex items-center justify-between font-mono text-xs text-terminal-dim uppercase">
+        <div class="flex items-center gap-1.5">
+          <span class="flag-mono text-terminal-bright bg-terminal-border py-px px-1 rounded-[3px]">[id_ID]</span>
           <span>Input Sumber</span>
         </div>
-        <div style="display:flex;gap:0.4rem;align-items:center;">
-          <button id="pasteBtn" class="action-btn">Paste</button>
-          <button id="clearBtn" class="action-btn ghost">Clear</button>
+        <div class="flex gap-1.5 items-center">
+          <button id="pasteBtn" class="action-btn bg-terminal-border border border-terminal-border-hover text-terminal-light py-0.5 px-2 rounded font-mono text-[0.7rem] cursor-pointer hover:border-terminal-dim focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Paste</button>
+          <button id="clearBtn" class="action-btn ghost bg-transparent border-transparent text-terminal-dim hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Clear</button>
         </div>
       </div>
+      <label for="inputText" class="sr-only">Teks yang akan diparafrase</label>
       <textarea
         id="inputText"
+        aria-describedby="charCount"
         placeholder="Masukkan teks komparasi di sini..."
-        maxlength="3000"></textarea>
-      <div class="char-row">
-        <span id="charCount" class="char-count">0 / 3000 EOF</span>
+        maxlength="3000"
+        class="w-full min-h-[130px] py-3 px-3.5 bg-terminal-bg border border-terminal-border rounded text-terminal-bright font-sans text-[0.9rem] font-normal leading-relaxed resize-y box-border caret-accent transition-colors focus:outline-none focus:border-terminal-border-hover"></textarea>
+      <div class="char-row flex justify-end">
+        <span id="charCount" class="char-count font-mono text-[0.7rem] text-terminal-muted">0 / 3000 EOF</span>
       </div>
     </div>
 
-    <button id="paraphraseBtn" class="btn-paraphrase">
+    <button id="paraphraseBtn" class="btn-paraphrase w-full py-3 px-4 bg-terminal-bright border border-terminal-bright text-terminal-bg font-mono text-[0.8rem] font-medium tracking-[0.05em] cursor-pointer rounded flex items-center justify-center transition-colors hover:opacity-85 disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-terminal-surface">
       <span id="btnLabel">EXECUTE PARAPHRASE</span>
       <span id="btnSpinner" class="spinner-txt hidden">EXEC_</span>
     </button>
 
-    <div id="errorBox" class="error-box hidden"></div>
+    <div id="errorBox" class="error-box hidden rounded font-mono text-xs" role="alert"></div>
 
     <ResultProgress />
   </div>
 
-  <button id="goUpBtn" class="btn-go-up hidden" aria-label="Kembali ke atas"
+  <button id="goUpBtn" class="btn-go-up hidden flex items-center justify-center cursor-pointer rounded font-mono text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Kembali ke atas"
     >↑</button
   >
 
-  <footer class="app-footer">
+  <footer class="app-footer font-mono text-[0.7rem] text-terminal-muted w-full max-w-[720px] text-left mt-4">
     root@phrase-paraphraser:~#
     <a
       href="https://www.instagram.com/kandar.lubis31"
       target="_blank"
       rel="noopener"
+      class="text-terminal-dim no-underline hover:text-accent"
       >@kandar.lubis31</a
     > ·
     <a href="https://github.com/kandarlubis31" target="_blank" rel="noopener"
+      class="text-terminal-dim no-underline hover:text-accent"
       >GitHub</a
     > ·
     <a href="https://www.paklubis.my.id" target="_blank" rel="noopener"
+      class="text-terminal-dim no-underline hover:text-accent"
       >paklubis.my.id</a
     >
   </footer>
 </div>
 
 <script>
-  import {
-    translate,
-    highlightDifferences,
-    initializeCooldown,
-    validateInputText,
-  } from "../utils/paraphraseEngine";
-
-  let isProcessing = false;
-
-  function initParaphraser() {
-    const textarea = document.getElementById(
-      "inputText",
-    ) as HTMLTextAreaElement;
-    const btn = document.getElementById("paraphraseBtn") as HTMLButtonElement;
-    const btnLabel = document.getElementById("btnLabel") as HTMLSpanElement;
-    const btnSpinner = document.getElementById("btnSpinner") as HTMLSpanElement;
-    const charCount = document.getElementById("charCount") as HTMLSpanElement;
-    const errorBox = document.getElementById("errorBox") as HTMLDivElement;
-    const results = document.getElementById("results") as HTMLDivElement;
-    const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement;
-    const dropdown = document.querySelector(
-      ".process-dropdown",
-    ) as HTMLDetailsElement;
-    const linearProgress = document.getElementById(
-      "linearProgress",
-    ) as HTMLDivElement;
-
-    const pasteBtn = document.getElementById("pasteBtn") as HTMLButtonElement;
-    const clearBtn = document.getElementById("clearBtn") as HTMLButtonElement;
-    const goUpBtn = document.getElementById("goUpBtn") as HTMLButtonElement;
-
-    const nodeNl = document.querySelector(".node-nl");
-    const nodeEn = document.querySelector(".node-en");
-    const nodeFinal = document.querySelector(".node-final");
-
-    if (!textarea || !btn) return;
-
-    if (results) results.style.setProperty("display", "none", "important");
-
-    // 🖥️ SYSTEM TERMINAL HEADER CLOCK ENGINE (Nembak ID murni di AppHeader)
-    const liveClockEl = document.getElementById("liveClock");
-    if (liveClockEl) {
-      const updateClock = () => {
-        const now = new Date();
-        const days = [
-          "MINGGU",
-          "SENIN",
-          "SELASA",
-          "RABU",
-          "KAMIS",
-          "JUMAT",
-          "SABTU",
-        ];
-        const dayName = days[now.getDay()];
-        const timeStr = now.toTimeString().split(" ")[0];
-        liveClockEl.textContent = `${dayName} ${timeStr}`;
-      };
-      updateClock();
-      if ((window as any).terminalClockInterval) {
-        clearInterval((window as any).terminalClockInterval);
-      }
-      (window as any).terminalClockInterval = setInterval(updateClock, 1000);
-    }
-
-    const savedInput = localStorage.getItem("paraphrase_input");
-    const savedOutput = localStorage.getItem("paraphrase_output");
-    const savedNl = localStorage.getItem("paraphrase_nl");
-    const savedEn = localStorage.getItem("paraphrase_en");
-
-    if (savedInput) {
-      textarea.value = savedInput;
-      handleCharCount();
-    }
-
-    if (savedOutput && results) {
-      results.style.setProperty("display", "flex", "important");
-
-      const t0 = document.getElementById("progress-text-0");
-      const t1 = document.getElementById("progress-text-1");
-      const t2 = document.getElementById("progress-text-2");
-      const t3 = document.getElementById("progress-text-3");
-      const s3 = document.getElementById("status-3");
-
-      if (t0) t0.textContent = savedInput;
-      if (t1) t1.textContent = savedNl;
-      if (t2) t2.textContent = savedEn;
-
-      if (t3) {
-        const resObj = highlightDifferences(
-          savedInput,
-          savedOutput,
-          Date.now() - 450,
-        );
-        t3.innerHTML = resObj.html;
-        if (s3) {
-          const now = new Date();
-          const days = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
-          const dayName = days[now.getDay()];
-          s3.textContent = `// EVAL_SUCCESS [${dayName}] [SIZE: ${resObj.metrics.sizeBytes}B] [LATENCY: ${resObj.metrics.durationMs}ms]`;
-          s3.style.color = "#10b981";
-        }
-      }
-
-      [1, 2, 3].forEach((i) => {
-        const badge = document.getElementById(`badge-${i}`);
-        if (badge) badge.classList.add("done");
-      });
-    }
-
-    const storedCooldown = sessionStorage.getItem("paraphrase_cooldown");
-    if (storedCooldown) {
-      const remainingTime = Math.ceil(
-        (parseInt(storedCooldown) - Date.now()) / 1000,
-      );
-      if (remainingTime > 0) {
-        isProcessing = true;
-        initializeCooldown(btn, btnLabel, remainingTime, () => {
-          isProcessing = false;
-        });
-      }
-    }
-
-    textarea.removeEventListener("input", handleCharCount);
-    textarea.addEventListener("input", handleCharCount);
-
-    textarea.addEventListener("paste", () => {
-      setTimeout(() => {
-        handleCharCount();
-        showToast("✓ TEKS BERHASIL DITEMPEL");
-      }, 50);
-    });
-
-    textarea.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        btn.click();
-      }
-    });
-
-    function handleCharCount() {
-      if (charCount && textarea) {
-        charCount.textContent = `${textarea.value.length} / 3000 EOF`;
-        localStorage.setItem("paraphrase_input", textarea.value);
-      }
-    }
-
-    function setLoading(on: boolean) {
-      isProcessing = on;
-      if (btn) btn.disabled = on;
-      if (btnLabel) btnLabel.classList.toggle("hidden", on);
-      if (btnSpinner) btnSpinner.classList.toggle("hidden", !on);
-      if (linearProgress) linearProgress.classList.toggle("hidden", !on);
-    }
-
-    function showError(msg: string) {
-      if (errorBox) {
-        errorBox.textContent = `[ERROR] ${msg}`;
-        errorBox.classList.remove("hidden");
-      }
-      if (results) results.style.setProperty("display", "none", "important");
-    }
-
-    function hideError() {
-      if (errorBox) errorBox.classList.add("hidden");
-    }
-
-    function resetBadges() {
-      [1, 2, 3].forEach((i) => {
-        const badge = document.getElementById(`badge-${i}`);
-        const statusSpan = document.getElementById(`status-${i}`);
-        const textSpan = document.getElementById(`progress-text-${i}`);
-
-        if (badge) badge.classList.remove("loading", "done", "error");
-        if (statusSpan) {
-          statusSpan.textContent = "";
-          statusSpan.style.animation = "none";
-          statusSpan.style.color = "";
-        }
-        if (textSpan) textSpan.textContent = "";
-      });
-
-      if (nodeNl) nodeNl.classList.remove("processing");
-      if (nodeEn) nodeEn.classList.remove("processing");
-      if (nodeFinal) nodeFinal.classList.remove("processing");
-    }
-
-    function updateBadge(
-      stepIdx: number,
-      status: "loading" | "done" | "error",
-    ) {
-      const badge = document.getElementById(`badge-${stepIdx}`);
-      const statusSpan = document.getElementById(`status-${stepIdx}`);
-      if (!badge || !statusSpan) return;
-
-      badge.classList.remove("loading", "done", "error");
-      badge.classList.add(status);
-
-      if (status === "loading") {
-        statusSpan.textContent = " ..";
-      } else if (status === "done") {
-        statusSpan.textContent = " OK";
-        statusSpan.style.color = "#10b981";
-      } else if (status === "error") {
-        statusSpan.textContent = " ERR";
-        statusSpan.style.color = "#ef4444";
-      }
-    }
-
-    if (clearBtn) {
-      clearBtn.onclick = () => {
-        textarea.value = "";
-        handleCharCount();
-        hideError();
-        resetBadges();
-        localStorage.clear();
-        showToast("✕ KALIMAT DIBERSIHKAN");
-        if (results) results.style.setProperty("display", "none", "important");
-      };
-    }
-
-    if (pasteBtn) {
-      pasteBtn.onclick = async () => {
-        try {
-          const text = await navigator.clipboard.readText();
-          textarea.value = text;
-          handleCharCount();
-          showToast("✓ TEKS BERHASIL DITEMPEL");
-        } catch (e) {}
-      };
-    }
-
-    if (goUpBtn) {
-      goUpBtn.onclick = () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      };
-
-      window.onscroll = () => {
-        if (
-          document.body.scrollTop > 400 ||
-          document.documentElement.scrollTop > 400
-        ) {
-          goUpBtn.classList.remove("hidden");
-        } else {
-          goUpBtn.classList.add("hidden");
-        }
-      };
-    }
-
-    btn.removeEventListener("click", handleParaphrase);
-    btn.addEventListener("click", handleParaphrase);
-
-    async function handleParaphrase() {
-      if (isProcessing) return;
-
-      const cooldownActive = sessionStorage.getItem("paraphrase_cooldown");
-      if (cooldownActive) {
-        const remaining = Math.ceil(
-          (parseInt(cooldownActive) - Date.now()) / 1000,
-        );
-        if (remaining > 0) {
-          showToast(
-            `✕ ANTRIAN PADAT: COOLDOWN_${remaining.toString().padStart(2, "0")}s`,
-          );
-          return;
-        }
-      }
-
-      const text = textarea.value.trim();
-
-      const validation = validateInputText(text);
-      if (!validation.valid) {
-        showError(validation.error || "Input tidak valid.");
-        return;
-      }
-
-      const pipelineStartTime = Date.now();
-      setLoading(true);
-      hideError();
-      resetBadges();
-      if (dropdown) dropdown.open = false;
-      if (results) results.style.setProperty("display", "none", "important");
-
-      const status3 = document.getElementById("status-3");
-
-      try {
-        const text0 = document.getElementById("progress-text-0");
-        if (text0) text0.textContent = text;
-
-        if (results) results.style.setProperty("display", "flex", "important");
-
-        setTimeout(() => {
-          if (results)
-            results.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 80);
-
-        // Step 1: ID → NL
-        if (status3) {
-          status3.textContent = ":: FETCH_PIPELINE (1/3) [nl]";
-          status3.style.color = "#a3a3a3";
-        }
-        updateBadge(1, "loading");
-        if (nodeNl) nodeNl.classList.add("processing");
-        const nlText = await translate(text, "id", "nl");
-        const text1 = document.getElementById("progress-text-1");
-        if (text1) text1.textContent = nlText;
-        updateBadge(1, "done");
-        if (nodeNl) nodeNl.classList.remove("processing");
-
-        // Step 2: NL → EN
-        if (status3) {
-          status3.textContent = ":: FETCH_PIPELINE (2/3) [en]";
-        }
-        updateBadge(2, "loading");
-        if (nodeEn) nodeEn.classList.add("processing");
-        const enText = await translate(nlText, "nl", "en");
-        const text2 = document.getElementById("progress-text-2");
-        if (text2) text2.textContent = enText;
-        updateBadge(2, "done");
-        if (nodeEn) nodeEn.classList.remove("processing");
-
-        // Step 3: EN → ID
-        if (status3) {
-          status3.textContent = ":: INTEGRATE_PIPELINE (3/3) [id_final]";
-        }
-        updateBadge(3, "loading");
-        if (nodeFinal) nodeFinal.classList.add("processing");
-        const idText = await translate(enText, "en", "id");
-        const text3 = document.getElementById("progress-text-3");
-
-        const diffObject = highlightDifferences(
-          text,
-          idText,
-          pipelineStartTime,
-        );
-
-        updateBadge(3, "done");
-        if (nodeFinal) nodeFinal.classList.remove("processing");
-
-        localStorage.setItem("paraphrase_input", text);
-        localStorage.setItem("paraphrase_nl", nlText);
-        localStorage.setItem("paraphrase_en", enText);
-        localStorage.setItem("paraphrase_output", idText);
-
-        if (text3) {
-          text3.innerHTML = "";
-
-          const tokens = diffObject.html.split(
-            /(<span class="diff-highlight">.*?<\/span>|\s+)/g,
-          );
-          let tokenIdx = 0;
-
-          if (status3) {
-            status3.textContent = `:: STREAMING_OUTPUT [SIZE: ${diffObject.metrics.sizeBytes}B]`;
-            status3.style.color = "#f59e0b";
-          }
-
-          const streamInterval = setInterval(() => {
-            const batchSize = 3;
-            let chunk = "";
-
-            for (let b = 0; b < batchSize; b++) {
-              if (tokenIdx < tokens.length) {
-                chunk += tokens[tokenIdx];
-                tokenIdx++;
-              }
-            }
-
-            text3.innerHTML += chunk;
-
-            if (tokenIdx >= tokens.length) {
-              clearInterval(streamInterval);
-              if (status3) {
-                const now = new Date();
-                const days = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"];
-                const dayName = days[now.getDay()];
-                status3.textContent = `// EVAL_SUCCESS [${dayName}] [SIZE: ${diffObject.metrics.sizeBytes}B] [LATENCY: ${diffObject.metrics.durationMs}ms]`;
-                status3.style.color = "#10b981";
-              }
-            }
-          }, 15);
-        }
-
-        const cooldownExpiry = Date.now() + 10000;
-        sessionStorage.setItem(
-          "paraphrase_cooldown",
-          cooldownExpiry.toString(),
-        );
-        initializeCooldown(btn, btnLabel, 10, () => {
-          isProcessing = false;
-        });
-
-        setTimeout(() => {
-          if (results)
-            results.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }, 150);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        showError(msg);
-        if (dropdown) dropdown.open = true;
-
-        if (status3) {
-          status3.textContent = "// EVAL_FAILED";
-          status3.style.color = "#ef4444";
-        }
-
-        [1, 2, 3].forEach((i) => {
-          const badge = document.getElementById(`badge-${i}`);
-          if (badge && badge.classList.contains("loading")) {
-            updateBadge(i, "error");
-          }
-        });
-        if (nodeNl) nodeNl.classList.remove("processing");
-        if (nodeEn) nodeEn.classList.remove("processing");
-        if (nodeFinal) nodeFinal.classList.remove("processing");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (copyBtn) {
-      copyBtn.replaceWith(copyBtn.cloneNode(true));
-      const freshCopyBtn = document.getElementById(
-        "copyBtn",
-      ) as HTMLButtonElement;
-
-      freshCopyBtn.addEventListener("click", () => {
-        const resultText = document.getElementById("progress-text-3");
-        if (!resultText || !resultText.textContent) return;
-
-        navigator.clipboard.writeText(resultText.textContent);
-        const orig = freshCopyBtn.textContent;
-        freshCopyBtn.textContent = "COPIED";
-        setTimeout(() => {
-          freshCopyBtn.textContent = orig;
-        }, 2000);
-      });
-    }
-  }
-
-  document.addEventListener("DOMContentLoaded", initParaphraser);
-  document.addEventListener("astro:page-load", initParaphraser);
-
-  function showToast(message: string) {
-    const toast = document.getElementById("toastNotification");
-    if (!toast) return;
-
-    const newToast = toast.cloneNode(true) as HTMLDivElement;
-    newToast.textContent = message;
-    newToast.classList.remove("hidden");
-
-    toast.parentNode?.replaceChild(newToast, toast);
-
-    setTimeout(() => {
-      newToast.classList.add("hidden");
-    }, 1800);
-  }
+  // Dynamic import: code-splits the entire client bundle (~14 KB)
+  // so it's only loaded when the page is interactive, not at initial parse.
+  document.addEventListener('DOMContentLoaded', () => {
+    import('../client/paraphraseController').then(m => m.initParaphraser()).catch(console.error);
+  });
+  document.addEventListener('astro:page-load', () => {
+    import('../client/paraphraseController').then(m => m.initParaphraser()).catch(console.error);
+  });
 </script>
 
 <style>
-  .app-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem 1.5rem;
-    gap: 1.25rem;
-    font-family: "Inter", sans-serif;
-    color: #a3a3a3;
-    background-color: #0a0a0a;
-    min-height: 100vh;
-  }
-
-  .card-main {
-    width: 100%;
-    max-width: 720px;
-    background: #171717;
-    border: 1px solid #262626;
-    border-radius: 6px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    position: relative;
-    box-shadow: none;
-  }
-
   .linear-progress {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 2px;
-    background: #262626;
+    background: theme('colors.terminal.border');
     overflow: hidden;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
   }
   .linear-bar {
     width: 40%;
     height: 100%;
-    background: #f59e0b;
+    background: theme('colors.accent.DEFAULT');
     animation: linearMove 1s linear infinite;
   }
   @keyframes linearMove {
-    from {
-      transform: translateX(-100%);
-    }
-    to {
-      transform: translateX(250%);
-    }
-  }
-
-  .input-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .section-label {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.75rem;
-    color: #737373;
-    text-transform: uppercase;
-  }
-
-  .flag-mono {
-    color: #e5e5e5;
-    background: #262626;
-    padding: 0.05rem 0.25rem;
-    border-radius: 3px;
-  }
-
-  textarea {
-    width: 100%;
-    min-height: 130px;
-    padding: 0.75rem 0.85rem;
-    background: #0a0a0a;
-    border: 1px solid #262626;
-    border-radius: 4px;
-    color: #e5e5e5;
-    font-family: "Inter", sans-serif;
-    font-size: 0.9rem;
-    font-weight: 400;
-    line-height: 1.6;
-    resize: vertical;
-    box-sizing: border-box;
-    caret-color: #f59e0b;
-    transition: border-color 0.15s ease;
-  }
-
-  textarea:focus {
-    outline: none;
-    border-color: #404040;
-  }
-
-  .char-row {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .char-count {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.7rem;
-    color: #525252;
-  }
-
-  .btn-paraphrase {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: #e5e5e5;
-    border: 1px solid #e5e5e5;
-    color: #0a0a0a;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.15s ease;
-  }
-
-  .btn-paraphrase:hover {
-    opacity: 0.85;
-  }
-
-  .btn-paraphrase:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(250%); }
   }
 
   .spinner-txt {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.8rem;
-    color: #737373;
+    color: theme('colors.terminal.dim');
     margin-left: 0.5rem;
     animation: blinkText 0.8s steps(1) infinite;
   }
-  @keyframes blinkText {
-    50% {
-      opacity: 0;
-    }
-  }
-
-  .action-btn {
-    background: #262626;
-    border: 1px solid #404040;
-    color: #d4d4d4;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.7rem;
-    cursor: pointer;
-  }
-
-  .action-btn:hover {
-    border-color: #737373;
-  }
-
-  .action-btn.ghost {
-    background: transparent;
-    border-color: transparent;
-    color: #737373;
-  }
-  .action-btn.ghost:hover {
-    color: #ef4444;
-  }
+  @keyframes blinkText { 50% { opacity: 0; } }
 
   .btn-go-up {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
     z-index: 99;
-    background: #171717;
-    border: 1px solid #262626;
-    color: #a3a3a3;
+    background: theme('colors.terminal.surface');
+    border: 1px solid theme('colors.terminal.border');
+    color: theme('colors.terminal.body');
     width: 36px;
     height: 36px;
-    border-radius: 4px;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   .btn-go-up:hover {
-    border-color: #404040;
-    color: #e5e5e5;
-  }
-
-  .hidden {
-    display: none !important;
+    border-color: theme('colors.terminal.border-hover');
+    color: theme('colors.terminal.bright');
   }
 
   .error-box {
     padding: 0.6rem 0.8rem;
-    background: rgba(239, 68, 68, 0.05);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 4px;
-    color: #fca5a5;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.75rem;
+    background: rgb(239 68 68 / 0.05);
+    border: 1px solid rgb(239 68 68 / 0.2);
+    color: theme('colors.error-light');
+    animation: errorEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .app-footer {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.7rem;
-    color: #525252;
-    width: 100%;
-    max-width: 720px;
-    text-align: left;
-    margin-top: 1rem;
+  @keyframes errorEnter {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
-  .app-footer a {
-    color: #737373;
-    text-decoration: none;
+  .btn-paraphrase {
+    transition: background 0.15s ease-out, border-color 0.15s ease-out, color 0.15s ease-out;
   }
-  .app-footer a:hover {
-    color: #f59e0b;
+
+  .btn-paraphrase.cancelling {
+    background: rgb(239 68 68 / 0.08);
+    border-color: rgb(239 68 68 / 0.3);
+    color: theme('colors.error-light');
+  }
+  .btn-paraphrase.cancelling:hover {
+    background: rgb(239 68 68 / 0.15);
+    border-color: theme('colors.error');
+    color: #fecaca;
+    opacity: 1;
   }
 
   @media (max-width: 640px) {
-    .app-wrapper {
-      padding: 1.5rem 0.75rem;
-      gap: 1rem;
-    }
-    .card-main {
-      padding: 1rem;
-    }
-    .btn-go-up {
-      bottom: 1.5rem;
-      right: 1.5rem;
-    }
+    .app-wrapper { padding: 1.5rem 0.75rem; gap: 1rem; }
+    .card-main { padding: 1rem; }
+    .btn-go-up { bottom: 1.5rem; right: 1.5rem; }
   }
 </style>

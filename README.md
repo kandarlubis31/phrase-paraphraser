@@ -51,37 +51,38 @@ Dengan melewatkan teks melalui **dua bahasa perantara** sebelum kembali ke Indon
                        │
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│              ASTRO SSR (Vercel Serverless)             │
+│              ASTRO SSR (Vercel / Self-Hosted)          │
 │                                                       │
-│  paraphraseEngine.ts                                  │
+│  paraphraseEngine.ts  ← API_MODE branch               │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐        │
 │  │ ID → NL  │───▶│ NL → EN  │───▶│ EN → ID  │        │
-│  │  (API)   │    │  (API)   │    │  (API)   │        │
 │  └────┬─────┘    └────┬─────┘    └────┬─────┘        │
 │       │               │               │               │
 └───────┼───────────────┼───────────────┼───────────────┘
         │               │               │
         ▼               ▼               ▼
-┌─────────────────────────────────────────────────────┐
-│         Cloudflare Worker (Translation Proxy)         │
-│       phrase-proxy.kandarlubis31.workers.dev          │
-│                                                       │
-│  Meneruskan request → MyMemory API (gratis, no auth)  │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  PUBLIC_API_MODE=on  →  Cloudflare Worker + MyMemory  │
+│  PUBLIC_API_MODE=off →  LibreTranslate (Docker, self) │
+└──────────────────────────────────────────────────────┘
 ```
 
 ### 🧠 Cara Kerja
 
 | Tahap | Proses | Keterangan |
 |-------|--------|------------|
-| **1. ID → NL** | Indonesia ke Belanda | Diterjemahkan via Cloudflare Worker proxy |
+| **1. ID → NL** | Indonesia ke Belanda | Diterjemahkan via API (Cloudflare Worker / LibreTranslate) |
 | **2. NL → EN** | Belanda ke Inggris | Restrukturisasi tata bahasa Eropa |
 | **3. EN → ID** | Inggris ke Indonesia | Hasil akhir parafrase + diff highlight |
 
 **Fitur tambahan:**
+- 🔀 **Dual API Mode** — Pilih Cloud (Worker proxy, gratis) atau Local (LibreTranslate Docker, unlimited) via env var
 - 🔒 **Slang Protection** — Kata slang Indonesia (bro, gw, lu, wkwk, dll) diamankan sebagai token numerik agar tidak hilang saat translasi
 - 🎨 **Diff Highlighting** — Kata-kata yang berubah di-highlight menggunakan algoritma LCS (Longest Common Subsequence)
 - 📡 **Streaming Output** — Hasil parafrase ditampilkan bertahap (karakter per karakter) seperti terminal
+- ❌ **Cancel Pipeline** — Batalkan eksekusi kapan aja dengan klik "CANCEL PIPELINE"
+- 💀 **Loading Skeleton** — Shimmer placeholder saat pipeline berjalan
+- 📭 **Empty State** — Placeholder terminal-style saat belum ada hasil
 - ⏱️ **Cooldown System** — Cooldown 10 detik antar request untuk menghormati batas rate-limit API gratis
 - 💾 **State Persistence** — Input dan hasil disimpan ke `localStorage` biar nggak hilang saat refresh
 - ⌨️ **Keyboard Shortcut** — `Ctrl+Enter` buat langsung eksekusi dari textarea
@@ -93,7 +94,8 @@ Dengan melewatkan teks melalui **dua bahasa perantara** sebelum kembali ke Indon
 | [Astro 4](https://astro.build) | Framework SSR (Server-Side Rendering) |
 | [Tailwind CSS 3](https://tailwindcss.com) | Utility-first CSS framework |
 | TypeScript | Type safety di seluruh codebase |
-| Cloudflare Workers | Proxy API translasi (eksternal) |
+| Cloudflare Workers | Proxy API translasi (eksternal, Mode Cloud) |
+| [LibreTranslate](https://libretranslate.com) | Engine translasi lokal (Mode Local, via Docker) |
 | [Vercel](https://vercel.com) | Hosting & deployment (serverless) |
 | pnpm | Package manager |
 
@@ -121,13 +123,17 @@ pnpm dev
 
 Buka `http://localhost:4321` di browser.
 
+> 📖 **Panduan deploy lengkap (Cloud vs Lokal, Docker, VPS, Vercel):** → **[DEPLOY.md](./DEPLOY.md)**
+
 ### ⚙️ Environment Variables
 
 | Variable | Deskripsi | Default |
 |----------|-----------|---------|
+| `PUBLIC_API_MODE` | Mode API: `on` (cloud) atau `off` (lokal) | `on` |
 | `PUBLIC_WORKER_URL` | URL Cloudflare Worker proxy | `https://phrase-proxy.kandarlubis31.workers.dev` |
+| `PUBLIC_LIBRETRANSLATE_URL` | URL LibreTranslate self-hosted | `http://localhost:5000` |
 
-> ℹ️ **Catatan untuk contributor:** Cloudflare Worker adalah dependency eksternal. Kalau kamu mau bikin fully self-hosted, kamu bisa deploy Worker sendiri (source code worker bisa diminta via issue ya!) atau ganti endpoint di `src/utils/paraphraseEngine.ts`.
+> ℹ️ **Dua mode tersedia:** `on` = pakai Cloudflare Worker (gratis, shared), `off` = LibreTranslate self-hosted via Docker (unlimited, lokal). Detail setup → **[DEPLOY.md](./DEPLOY.md)**.
 
 ### ⚠️ Batasan API Gratis & Cara Scaling
 
@@ -178,9 +184,10 @@ Mau lebih ngebut atau kualitas lebih oke? Ganti backend translasi di `src/utils/
 | Provider | Free Tier | Setup |
 |----------|-----------|-------|
 | [Google Translate API](https://cloud.google.com/translate) | 500.000 karakter/bln | Butuh GCP account + billing (aman, nggak bakal ditagih selama di bawah limit) |
-| [LibreTranslate](https://libretranslate.com) | Unlimited (self-host) | Deploy container sendiri — no rate limit! |
 | [DeepL API](https://www.deepl.com/pro-api) | 500.000 karakter/bln | Kualitas terjemahan terbaik, butuh kartu kredit |
 | MyMemory (default) | ~1000-5000 kata/hari | Tanpa daftar, paling gampang |
+
+> 💡 **Atau langsung pakai mode built-in!** Setting `PUBLIC_API_MODE=off` di `.env` + LibreTranslate Docker = **unlimited, tanpa ganti kode.** Panduan lengkap → **[DEPLOY.md](./DEPLOY.md)**.
 
 > 💡 **Rekomendasi:** Mulai dari deploy Worker sendiri (Level 1 — gratis, 30 menit). Udah cukup buat personal use bahkan rame user. Kalau butuh lebih, lompat ke VPS atau ganti provider.
 
@@ -189,32 +196,33 @@ Mau lebih ngebut atau kualitas lebih oke? Ganti backend translasi di `src/utils/
 ```
 phrase-paraphraser/
 ├── src/
-│   ├── components/              # Komponen Astro UI
-│   │   ├── AppHeader.astro          # Header terminal-style + jam live
-│   │   ├── EditorialFeatures.astro  # Highlight fitur utama
-│   │   ├── FlowVisual.astro         # Visualisasi pipeline ID→NL→EN→ID
-│   │   ├── ResultProgress.astro     # Panel hasil + intermediate logs
-│   │   ├── StepProgress.astro       # ⚠️ [LEGACY] Tidak digunakan, siap refactor
-│   │   └── TranslateBox.astro       # ⭐ Komponen utama (UI + client logic)
-│   ├── lib/
-│   │   └── translate.ts             # ⚠️ [LEGACY] MyMemory API client lama
+│   ├── client/                     # ⭐ Client-side modules (TypeScript)
+│   │   ├── paraphraseController.ts    # Orchestrator utama UI
+│   │   ├── streamRenderer.ts          # Streaming output (token → DOM)
+│   │   ├── dom.ts                     # DOM element cache
+│   │   └── storage.ts                 # localStorage/sessionStorage helpers
+│   ├── components/                 # Komponen Astro UI
+│   │   ├── AppHeader.astro            # Header + live clock + mode badge
+│   │   ├── EditorialFeatures.astro    # Highlight fitur utama
+│   │   ├── FlowVisual.astro           # Visualisasi pipeline ID→NL→EN→ID
+│   │   ├── ResultProgress.astro       # Panel hasil + skeleton + empty state
+│   │   └── TranslateBox.astro         # ⭐ Komponen utama (5 baris script!)
 │   ├── pages/
-│   │   ├── api/
-│   │   │   └── paraphrase.ts        # ⚠️ [LEGACY] API endpoint lama
-│   │   └── index.astro              # Halaman utama
+│   │   └── index.astro                # Halaman utama
 │   ├── styles/
-│   │   └── global.css               # Global styles + Tailwind
+│   │   └── global.css                 # Global styles + Tailwind
 │   └── utils/
-│       └── paraphraseEngine.ts      # ⭐ Engine utama (translate, diff, validasi, cooldown)
-├── .env.example                 # Template environment variables
-├── astro.config.mjs             # Konfigurasi Astro + Vercel adapter
-├── tailwind.config.mjs          # Konfigurasi Tailwind
-├── tsconfig.json                # Konfigurasi TypeScript (strict mode)
-├── vercel.json                  # Konfigurasi Vercel deployment
-└── package.json                 # Dependencies & scripts
+│       └── paraphraseEngine.ts        # ⭐ Engine utama (translate, diff, validasi, cooldown)
+├── DEPLOY.md                      # 📖 Panduan deploy lengkap
+├── .env.example                   # Template environment variables
+├── astro.config.mjs               # Konfigurasi Astro + Vercel adapter
+├── tailwind.config.mjs            # Konfigurasi Tailwind (terminal palette)
+├── tsconfig.json                  # Konfigurasi TypeScript (strict mode)
+├── vercel.json                    # Konfigurasi Vercel deployment
+└── package.json                   # Dependencies & scripts
 ```
 
-> 💡 **Info buat contributor baru:** File yang ditandai ⚠️ `[LEGACY]` itu kode lama yang udah nggak dipakai. Jadi target empuk buat **good first issue** — kamu bisa bantu bersihin atau refactor!
+> 💡 **Info buat contributor baru:** Kodebase modular — 1 engine utility + 4 client modules + 5 komponen Astro. Mulai dari baca `paraphraseEngine.ts` buat ngerti core logic, `paraphraseController.ts` buat UI orchestrator, terus `TranslateBox.astro` yang sekarang cuma 5 baris script. Panduan deploy lengkap → **[DEPLOY.md](./DEPLOY.md)**.
 
 ### 📜 Scripts
 
@@ -235,12 +243,12 @@ Dari first-timer guide, issue labels, alur kontribusi, PR checklist, dev workflo
 
 > 🔥 **Mau bantu salah satu ini? Langsung eksekusi aja — atau buka issue dulu buat diskusi!**
 
-- [ ] **Self-hosted pipeline** tanpa Cloudflare Worker — bikin translation langsung dari Astro endpoint (`help wanted`)
+- [x] **Self-hosted pipeline** — LibreTranslate via Docker, `API_MODE=off` (✅ DONE!)
+- [x] **Pisahkan client logic** — `src/client/` modules (controller, DOM, storage, stream) (✅ DONE!)
 - [ ] **Dukungan bahasa perantara tambahan** (Jepang, Korea, Prancis, dll) (`help wanted`)
 - [ ] **Mode batch** — input banyak teks sekaligus, output paralel (`good first issue` — bisa mulai dari UI dulu)
 - [ ] **Export hasil** ke PDF / TXT / Markdown (`good first issue`)
 - [ ] **Unit testing** pake Vitest (`help wanted` — setup dari nol)
-- [ ] **Bersihin legacy code** — `StepProgress.astro`, `translate.ts`, `paraphrase.ts` (`good first issue`)
 - [ ] **Dark/Light mode toggle** (`good first issue`)
 - [ ] **PWA support** — offline capability + install prompt (`enhancement`)
 - [ ] **Share hasil ke Twitter/WA** — social share button (`enhancement`)
@@ -292,37 +300,38 @@ By routing text through **two intermediate languages** before returning to Indon
                        │
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│              ASTRO SSR (Vercel Serverless)             │
+│              ASTRO SSR (Vercel / Self-Hosted)          │
 │                                                       │
-│  paraphraseEngine.ts                                  │
+│  paraphraseEngine.ts  ← API_MODE branch               │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐        │
 │  │ ID → NL  │───▶│ NL → EN  │───▶│ EN → ID  │        │
-│  │  (API)   │    │  (API)   │    │  (API)   │        │
 │  └────┬─────┘    └────┬─────┘    └────┬─────┘        │
 │       │               │               │               │
 └───────┼───────────────┼───────────────┼───────────────┘
         │               │               │
         ▼               ▼               ▼
-┌─────────────────────────────────────────────────────┐
-│         Cloudflare Worker (Translation Proxy)         │
-│       phrase-proxy.kandarlubis31.workers.dev          │
-│                                                       │
-│  Forwards requests → MyMemory API (free, no auth)     │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  PUBLIC_API_MODE=on  →  Cloudflare Worker + MyMemory  │
+│  PUBLIC_API_MODE=off →  LibreTranslate (Docker, self) │
+└──────────────────────────────────────────────────────┘
 ```
 
 ### 🧠 How It Works
 
 | Stage | Process | Notes |
 |-------|---------|-------|
-| **1. ID → NL** | Indonesian to Dutch | Translated via Cloudflare Worker proxy |
+| **1. ID → NL** | Indonesian to Dutch | Translated via API (Cloudflare Worker / LibreTranslate) |
 | **2. NL → EN** | Dutch to English | European grammar restructuring |
 | **3. EN → ID** | English to Indonesian | Final paraphrased output + diff highlight |
 
 **Additional features:**
+- 🔀 **Dual API Mode** — Choose Cloud (Worker proxy, free) or Local (LibreTranslate Docker, unlimited) via env var
 - 🔒 **Slang Protection** — Indonesian slang words (bro, gw, lu, wkwk, etc.) are secured as numeric tokens to prevent loss during translation
 - 🎨 **Diff Highlighting** — Changed words are highlighted using LCS (Longest Common Subsequence) algorithm
 - 📡 **Streaming Output** — Paraphrased results are displayed character by character, terminal-style
+- ❌ **Cancel Pipeline** — Cancel execution anytime by clicking "CANCEL PIPELINE"
+- 💀 **Loading Skeleton** — Shimmer placeholder while the pipeline runs
+- 📭 **Empty State** — Terminal-style placeholder when no results yet
 - ⏱️ **Cooldown System** — 10-second cooldown between requests to respect free API rate limits
 - 💾 **State Persistence** — Input and results are saved to `localStorage` so nothing is lost on refresh
 - ⌨️ **Keyboard Shortcut** — `Ctrl+Enter` to execute directly from the textarea
@@ -334,7 +343,8 @@ By routing text through **two intermediate languages** before returning to Indon
 | [Astro 4](https://astro.build) | SSR Framework (Server-Side Rendering) |
 | [Tailwind CSS 3](https://tailwindcss.com) | Utility-first CSS framework |
 | TypeScript | Type safety across the codebase |
-| Cloudflare Workers | Translation API proxy (external) |
+| Cloudflare Workers | Translation API proxy (external, Cloud Mode) |
+| [LibreTranslate](https://libretranslate.com) | Local translation engine (Local Mode, via Docker) |
 | [Vercel](https://vercel.com) | Hosting & deployment (serverless) |
 | pnpm | Package manager |
 
@@ -362,13 +372,17 @@ pnpm dev
 
 Open `http://localhost:4321` in your browser.
 
+> 📖 **Full deployment guide (Cloud vs Local, Docker, VPS, Vercel):** → **[DEPLOY.md](./DEPLOY.md)**
+
 ### ⚙️ Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `PUBLIC_API_MODE` | API mode: `on` (cloud) or `off` (local) | `on` |
 | `PUBLIC_WORKER_URL` | Cloudflare Worker proxy URL | `https://phrase-proxy.kandarlubis31.workers.dev` |
+| `PUBLIC_LIBRETRANSLATE_URL` | LibreTranslate self-hosted URL | `http://localhost:5000` |
 
-> ℹ️ **Note for contributors:** The Cloudflare Worker is an external dependency. If you want to run this fully self-hosted, you can deploy your own Worker (source code available upon request — just open an issue!) or replace the endpoint in `src/utils/paraphraseEngine.ts`.
+> ℹ️ **Two modes available:** `on` = Cloudflare Worker (free, shared), `off` = LibreTranslate self-hosted via Docker (unlimited, local). Setup details → **[DEPLOY.md](./DEPLOY.md)**.
 
 ### ⚠️ Free API Limits & How to Scale
 
@@ -419,9 +433,10 @@ Want even more speed or quality? Swap out the translation backend in `src/utils/
 | Provider | Free Tier | Setup |
 |----------|-----------|-------|
 | [Google Translate API](https://cloud.google.com/translate) | 500K chars/month | Requires GCP account + billing (safe — won't charge under limit) |
-| [LibreTranslate](https://libretranslate.com) | Unlimited (self-host) | Deploy your own container — no rate limits! |
 | [DeepL API](https://www.deepl.com/pro-api) | 500K chars/month | Best translation quality, requires credit card |
 | MyMemory (default) | ~1000-5000 words/day | No registration, simplest setup |
+
+> 💡 **Or use the built-in mode!** Set `PUBLIC_API_MODE=off` in `.env` + LibreTranslate Docker = **unlimited, no code changes.** Full guide → **[DEPLOY.md](./DEPLOY.md)**.
 
 > 💡 **Recommendation:** Start by deploying your own Worker (Level 1 — free, 30 minutes). Plenty for personal use even with many users. Need more? Jump to a VPS or switch providers.
 
@@ -430,32 +445,33 @@ Want even more speed or quality? Swap out the translation backend in `src/utils/
 ```
 phrase-paraphraser/
 ├── src/
-│   ├── components/              # Astro UI Components
-│   │   ├── AppHeader.astro          # Terminal-style header + live clock
-│   │   ├── EditorialFeatures.astro  # Feature highlights
-│   │   ├── FlowVisual.astro         # ID→NL→EN→ID pipeline visualization
-│   │   ├── ResultProgress.astro     # Results panel + intermediate logs
-│   │   ├── StepProgress.astro       # ⚠️ [LEGACY] Unused, ready for cleanup
-│   │   └── TranslateBox.astro       # ⭐ Main component (UI + client logic)
-│   ├── lib/
-│   │   └── translate.ts             # ⚠️ [LEGACY] Old MyMemory API client
+│   ├── client/                     # ⭐ Client-side modules (TypeScript)
+│   │   ├── paraphraseController.ts    # Main UI orchestrator
+│   │   ├── streamRenderer.ts          # Streaming output (token → DOM)
+│   │   ├── dom.ts                     # DOM element cache
+│   │   └── storage.ts                 # localStorage/sessionStorage helpers
+│   ├── components/                 # Astro UI Components
+│   │   ├── AppHeader.astro            # Header + live clock + mode badge
+│   │   ├── EditorialFeatures.astro    # Feature highlights
+│   │   ├── FlowVisual.astro           # ID→NL→EN→ID pipeline visualization
+│   │   ├── ResultProgress.astro       # Results panel + skeleton + empty state
+│   │   └── TranslateBox.astro         # ⭐ Main component (only 5 lines of script!)
 │   ├── pages/
-│   │   ├── api/
-│   │   │   └── paraphrase.ts        # ⚠️ [LEGACY] Old API endpoint
-│   │   └── index.astro              # Main page
+│   │   └── index.astro                # Main page
 │   ├── styles/
-│   │   └── global.css               # Global styles + Tailwind
+│   │   └── global.css                 # Global styles + Tailwind
 │   └── utils/
-│       └── paraphraseEngine.ts      # ⭐ Core engine (translate, diff, validation, cooldown)
-├── .env.example                 # Environment variables template
-├── astro.config.mjs             # Astro + Vercel adapter config
-├── tailwind.config.mjs          # Tailwind configuration
-├── tsconfig.json                # TypeScript config (strict mode)
-├── vercel.json                  # Vercel deployment config
-└── package.json                 # Dependencies & scripts
+│       └── paraphraseEngine.ts        # ⭐ Core engine (translate, diff, validation, cooldown)
+├── DEPLOY.md                      # 📖 Full deployment guide
+├── .env.example                   # Environment variables template
+├── astro.config.mjs               # Astro + Vercel adapter config
+├── tailwind.config.mjs            # Tailwind config (terminal palette)
+├── tsconfig.json                  # TypeScript config (strict mode)
+├── vercel.json                    # Vercel deployment config
+└── package.json                   # Dependencies & scripts
 ```
 
-> 💡 **Heads up for new contributors:** Files marked ⚠️ `[LEGACY]` are old code that's no longer in use. Perfect targets for **good first issues** — help clean 'em up or refactor!
+> 💡 **Heads up for new contributors:** The codebase is modular — 1 engine utility + 4 client modules + 5 Astro components. Start with `paraphraseEngine.ts` for core logic, `paraphraseController.ts` for the UI orchestrator, then `TranslateBox.astro` which is now just 5 lines of script. Full deploy guide → **[DEPLOY.md](./DEPLOY.md)**.
 
 ### 📜 Scripts
 
@@ -476,12 +492,12 @@ First-timer guide, issue labels, contribution workflow, PR checklist, dev workfl
 
 > 🔥 **Wanna help with one of these? Just go for it — or open an issue to discuss first!**
 
-- [ ] **Self-hosted pipeline** — bypass Cloudflare Worker entirely (`help wanted`)
+- [x] **Self-hosted pipeline** — LibreTranslate via Docker, `API_MODE=off` (✅ DONE!)
+- [x] **Separate client logic** — `src/client/` modules (controller, DOM, storage, stream) (✅ DONE!)
 - [ ] **Additional intermediate languages** (Japanese, Korean, French, etc.) (`help wanted`)
 - [ ] **Batch mode** — multiple texts at once, parallel output (`good first issue` — UI first!)
 - [ ] **Export results** to PDF / TXT / Markdown (`good first issue`)
 - [ ] **Unit testing** with Vitest (`help wanted` — greenfield setup!)
-- [ ] **Clean up legacy code** — `StepProgress.astro`, `translate.ts`, `paraphrase.ts` (`good first issue`)
 - [ ] **Dark/Light mode toggle** (`good first issue`)
 - [ ] **PWA support** — offline capability + install prompt (`enhancement`)
 - [ ] **Share to Twitter/WhatsApp** — social share button (`enhancement`)
