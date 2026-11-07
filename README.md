@@ -1,4 +1,4 @@
-# ✦ Phrase Paraphraser
+# Phrase Paraphraser
 
 <div align="center">
 
@@ -12,26 +12,26 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-%23f59e0b?logo=github)](https://github.com/kandarlubis31/phrase-paraphraser/pulls)
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-ready-%23ff6b35)](https://hacktoberfest.com)
 
-> **Open source. Open to all. Let's build together! 🚀**
+> **Open source. Open to all. Let's build together!**
 
-[🇮🇩 Bahasa Indonesia](#-bahasa-indonesia) · [🇬🇧 English](#-english)
+[ Bahasa Indonesia](#-bahasa-indonesia) · [ English](#-english)
 
 </div>
 
 ---
 
 <a id="-bahasa-indonesia"></a>
-## 🇮🇩 Bahasa Indonesia
+## Bahasa Indonesia
 
-### ⚡ Coba Langsung
+### Coba Langsung
 
-👉 **[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
+ **[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
 
-Langsung terjun ke kode? Loncat ke [🚀 Instalasi](#-instalasi).
+Langsung terjun ke kode? Loncat ke [ Instalasi](#-instalasi).
 
 ---
 
-### ✨ Tentang
+### Tentang
 
 **Phrase Paraphraser** adalah engine parafrase teks Indonesia yang bekerja melalui pipeline translasi 3-hop rekursif:
 
@@ -41,7 +41,7 @@ Input (ID)  →  Belanda (NL)  →  Inggris (EN)  →  Final (ID)
 
 Dengan melewatkan teks melalui **dua bahasa perantara** sebelum kembali ke Indonesia, struktur kalimat berubah drastis sementara makna inti tetap terjaga. Cocok untuk menghindari plagiarisme, menulis ulang konten, atau eksperimen NLP ringan.
 
-### 🏗️ Arsitektur
+### Arsitektur
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -67,7 +67,7 @@ Dengan melewatkan teks melalui **dua bahasa perantara** sebelum kembali ke Indon
 └──────────────────────────────────────────────────────┘
 ```
 
-### 🧠 Cara Kerja
+### Cara Kerja
 
 | Tahap | Proses | Keterangan |
 |-------|--------|------------|
@@ -76,18 +76,18 @@ Dengan melewatkan teks melalui **dua bahasa perantara** sebelum kembali ke Indon
 | **3. EN → ID** | Inggris ke Indonesia | Hasil akhir parafrase + diff highlight |
 
 **Fitur tambahan:**
-- 🔀 **Dual API Mode** — Pilih Cloud (Worker proxy, gratis) atau Local (LibreTranslate Docker, unlimited) via env var
-- 🔒 **Slang Protection** — Kata slang Indonesia (bro, gw, lu, wkwk, dll) diamankan sebagai token numerik agar tidak hilang saat translasi
-- 🎨 **Diff Highlighting** — Kata-kata yang berubah di-highlight menggunakan algoritma LCS (Longest Common Subsequence)
-- 📡 **Streaming Output** — Hasil parafrase ditampilkan bertahap (karakter per karakter) seperti terminal
-- ❌ **Cancel Pipeline** — Batalkan eksekusi kapan aja dengan klik "CANCEL PIPELINE"
-- 💀 **Loading Skeleton** — Shimmer placeholder saat pipeline berjalan
-- 📭 **Empty State** — Placeholder terminal-style saat belum ada hasil
-- ⏱️ **Cooldown System** — Cooldown 10 detik antar request untuk menghormati batas rate-limit API gratis
-- 💾 **State Persistence** — Input dan hasil disimpan ke `localStorage` biar nggak hilang saat refresh
-- ⌨️ **Keyboard Shortcut** — `Ctrl+Enter` buat langsung eksekusi dari textarea
+- **Dual API Mode** — Pilih Cloud (Worker proxy, gratis) atau Local (LibreTranslate Docker, unlimited) via env var
+- **Slang Protection** — Kata slang Indonesia (bro, gw, lu, wkwk, dll) diamankan sebagai token numerik agar tidak hilang saat translasi
+- **Diff Highlighting** — Kata-kata yang berubah di-highlight menggunakan algoritma LCS (Longest Common Subsequence)
+- **Streaming Output** — Hasil parafrase ditampilkan bertahap (karakter per karakter) seperti terminal
+- **Cancel Pipeline** — Batalkan eksekusi kapan aja dengan klik "CANCEL PIPELINE"
+- **Loading Skeleton** — Shimmer placeholder saat pipeline berjalan
+- **Empty State** — Placeholder terminal-style saat belum ada hasil
+- **Cooldown System** — Cooldown 10 detik antar request untuk menghormati batas rate-limit API gratis
+- **State Persistence** — Input dan hasil disimpan ke `localStorage` biar nggak hilang saat refresh
+- **Keyboard Shortcut** — `Ctrl+Enter` buat langsung eksekusi dari textarea
 
-### 🛠️ Teknologi
+### Teknologi
 
 | Teknologi | Penggunaan |
 |-----------|------------|
@@ -99,12 +99,12 @@ Dengan melewatkan teks melalui **dua bahasa perantara** sebelum kembali ke Indon
 | [Vercel](https://vercel.com) | Hosting & deployment (serverless) |
 | pnpm | Package manager |
 
-### 📦 Prasyarat
+### Prasyarat
 
 - **Node.js** `>= 20.x`
 - **pnpm** (recommended) — `npm install -g pnpm`
 
-### 🚀 Instalasi
+### Instalasi
 
 ```bash
 # 1. Clone repository
@@ -123,9 +123,9 @@ pnpm dev
 
 Buka `http://localhost:4321` di browser.
 
-> 📖 **Panduan deploy lengkap (Cloud vs Lokal, Docker, VPS, Vercel):** → **[DEPLOY.md](./DEPLOY.md)**
+> **Panduan deploy lengkap (Cloud vs Lokal, Docker, VPS, Vercel):** → **[DEPLOY.md](./DEPLOY.md)**
 
-### ⚙️ Environment Variables
+### Environment Variables
 
 | Variable | Deskripsi | Default |
 |----------|-----------|---------|
@@ -133,9 +133,9 @@ Buka `http://localhost:4321` di browser.
 | `PUBLIC_WORKER_URL` | URL Cloudflare Worker proxy | `https://phrase-proxy.kandarlubis31.workers.dev` |
 | `PUBLIC_LIBRETRANSLATE_URL` | URL LibreTranslate self-hosted | `http://localhost:5000` |
 
-> ℹ️ **Dua mode tersedia:** `on` = pakai Cloudflare Worker (gratis, shared), `off` = LibreTranslate self-hosted via Docker (unlimited, lokal). Detail setup → **[DEPLOY.md](./DEPLOY.md)**.
+> ℹ **Dua mode tersedia:** `on` = pakai Cloudflare Worker (gratis, shared), `off` = LibreTranslate self-hosted via Docker (unlimited, lokal). Detail setup → **[DEPLOY.md](./DEPLOY.md)**.
 
-### ⚠️ Batasan API Gratis & Cara Scaling
+### Batasan API Gratis & Cara Scaling
 
 Project ini pakai **MyMemory API** (gratis, tanpa authentication) lewat Cloudflare Worker sebagai proxy. Kerennya? Bisa langsung dipakai tanpa daftar apa pun. Tapi ada batasannya:
 
@@ -145,11 +145,11 @@ Project ini pakai **MyMemory API** (gratis, tanpa authentication) lewat Cloudfla
 | **Rate limit** | ~1 req/detik | ~5 req/detik |
 | **Daftar** | Tidak perlu | [Daftar gratis](https://mymemory.translated.net/doc/spec.php) |
 
-> 🔴 **Demo live di [phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** pakai shared worker + akses anonim. Kalau tiba-tiba error pas rame-rame, itu karena limit barengan habis. Sabar ya! 😅
+> **Demo live di [phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** pakai shared worker + akses anonim. Kalau tiba-tiba error pas rame-rame, itu karena limit barengan habis. Sabar ya!
 
-#### 🚀 Mau Bebas Limit? Ini Jalurnya:
+#### Mau Bebas Limit? Ini Jalurnya:
 
-**1. 🥇 Deploy Cloudflare Worker Sendiri (30 menit, GRATIS)**
+**1. Deploy Cloudflare Worker Sendiri (30 menit, GRATIS)**
 
 Ini step paling penting! Dengan deploy worker sendiri, kamu nggak sharing kuota sama pengguna lain:
 
@@ -165,7 +165,7 @@ PUBLIC_WORKER_URL=https://phrase-proxy-pribadi.namakamu.workers.dev
 
 Udah! Sekarang kamu punya dedicated quota + nggak ganggu pengguna lain.
 
-**2. 🥈 Self-Host di VPS (1-2 jam, $0-$5/bulan)**
+**2. Self-Host di VPS (1-2 jam, $0-$5/bulan)**
 
 Mau full control tanpa batas? Deploy semuanya di server sendiri — udah termasuk worker + frontend:
 
@@ -177,7 +177,7 @@ Mau full control tanpa batas? Deploy semuanya di server sendiri — udah termasu
 | [Hetzner VPS](https://www.hetzner.com/cloud) | ~$4/bln | VPS dedicated, performa kencang |
 | [Vercel](https://vercel.com) | $0/bln (hobby) | Tetap di Vercel tapi arahkan ke worker sendiri |
 
-**3. 🥉 Ganti Provider Translasi (advance)**
+**3. Ganti Provider Translasi (advance)**
 
 Mau lebih ngebut atau kualitas lebih oke? Ganti backend translasi di `src/utils/paraphraseEngine.ts`:
 
@@ -187,11 +187,11 @@ Mau lebih ngebut atau kualitas lebih oke? Ganti backend translasi di `src/utils/
 | [DeepL API](https://www.deepl.com/pro-api) | 500.000 karakter/bln | Kualitas terjemahan terbaik, butuh kartu kredit |
 | MyMemory (default) | ~1000-5000 kata/hari | Tanpa daftar, paling gampang |
 
-> 💡 **Atau langsung pakai mode built-in!** Setting `PUBLIC_API_MODE=off` di `.env` + LibreTranslate Docker = **unlimited, tanpa ganti kode.** Panduan lengkap → **[DEPLOY.md](./DEPLOY.md)**.
+> **Atau langsung pakai mode built-in!** Setting `PUBLIC_API_MODE=off` di `.env` + LibreTranslate Docker = **unlimited, tanpa ganti kode.** Panduan lengkap → **[DEPLOY.md](./DEPLOY.md)**.
 
-> 💡 **Rekomendasi:** Mulai dari deploy Worker sendiri (Level 1 — gratis, 30 menit). Udah cukup buat personal use bahkan rame user. Kalau butuh lebih, lompat ke VPS atau ganti provider.
+> **Rekomendasi:** Mulai dari deploy Worker sendiri (Level 1 — gratis, 30 menit). Udah cukup buat personal use bahkan rame user. Kalau butuh lebih, lompat ke VPS atau ganti provider.
 
-### 📁 Struktur Project
+### Struktur Project
 
 ```
 phrase-paraphraser/
@@ -222,9 +222,9 @@ phrase-paraphraser/
 └── package.json                   # Dependencies & scripts
 ```
 
-> 💡 **Info buat contributor baru:** Kodebase modular — 1 engine utility + 4 client modules + 5 komponen Astro. Mulai dari baca `paraphraseEngine.ts` buat ngerti core logic, `paraphraseController.ts` buat UI orchestrator, terus `TranslateBox.astro` yang sekarang cuma 5 baris script. Panduan deploy lengkap → **[DEPLOY.md](./DEPLOY.md)**.
+> **Info buat contributor baru:** Kodebase modular — 1 engine utility + 4 client modules + 5 komponen Astro. Mulai dari baca `paraphraseEngine.ts` buat ngerti core logic, `paraphraseController.ts` buat UI orchestrator, terus `TranslateBox.astro` yang sekarang cuma 5 baris script. Panduan deploy lengkap → **[DEPLOY.md](./DEPLOY.md)**.
 
-### 📜 Scripts
+### Scripts
 
 | Command | Deskripsi |
 |---------|-----------|
@@ -233,18 +233,18 @@ phrase-paraphraser/
 | `pnpm preview` | Preview build production |
 | `pnpm deploy` | Deploy ke Vercel — butuh [Vercel CLI](https://vercel.com/docs/cli) |
 
-### 🤝 Mau Kontribusi?
+### Mau Kontribusi?
 
-Semua detail ada di **[CONTRIBUTING.md](./CONTRIBUTING.md)**! 🚀
+Semua detail ada di **[CONTRIBUTING.md](./CONTRIBUTING.md)**!
 
-Dari first-timer guide, issue labels, alur kontribusi, PR checklist, dev workflow, sampai code style — semuanya lengkap di sana. Cus langsung cek! 🔥
+Dari first-timer guide, issue labels, alur kontribusi, PR checklist, dev workflow, sampai code style — semuanya lengkap di sana. Cus langsung cek!
 
-### 🗺️ Roadmap
+### Roadmap
 
-> 🔥 **Mau bantu salah satu ini? Langsung eksekusi aja — atau buka issue dulu buat diskusi!**
+> **Mau bantu salah satu ini? Langsung eksekusi aja — atau buka issue dulu buat diskusi!**
 
-- [x] **Self-hosted pipeline** — LibreTranslate via Docker, `API_MODE=off` (✅ DONE!)
-- [x] **Pisahkan client logic** — `src/client/` modules (controller, DOM, storage, stream) (✅ DONE!)
+- [x] **Self-hosted pipeline** — LibreTranslate via Docker, `API_MODE=off` ( DONE!)
+- [x] **Pisahkan client logic** — `src/client/` modules (controller, DOM, storage, stream) ( DONE!)
 - [ ] **Dukungan bahasa perantara tambahan** (Jepang, Korea, Prancis, dll) (`help wanted`)
 - [ ] **Mode batch** — input banyak teks sekaligus, output paralel (`good first issue` — bisa mulai dari UI dulu)
 - [ ] **Export hasil** ke PDF / TXT / Markdown (`good first issue`)
@@ -253,34 +253,34 @@ Dari first-timer guide, issue labels, alur kontribusi, PR checklist, dev workflo
 - [ ] **PWA support** — offline capability + install prompt (`enhancement`)
 - [ ] **Share hasil ke Twitter/WA** — social share button (`enhancement`)
 
-### 👥 Contributors
+### Contributors
 
-Terima kasih buat semua yang udah kontribusi! 🎉
+Terima kasih buat semua yang udah kontribusi!
 
-> _Belum ada contributor selain author? Jangan ragu buat jadi yang pertama! Dan jangan lupa tambahin nama kamu sendiri di sini pas bikin PR ya! 😉_
+> _Belum ada contributor selain author? Jangan ragu buat jadi yang pertama! Dan jangan lupa tambahin nama kamu sendiri di sini pas bikin PR ya! _
 
 <a href="https://github.com/kandarlubis31/phrase-paraphraser/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
+ <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
 </a>
 
-### 📄 Lisensi
+### Lisensi
 
 [MIT License](./LICENSE) © 2025 [Kandar Lubis](https://github.com/kandarlubis31)
 
 ---
 
 <a id="-english"></a>
-## 🇬🇧 English
+## English
 
-### ⚡ Quick Start
+### Quick Start
 
-👉 **[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
+ **[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
 
-Ready to jump into the code? Skip to [🚀 Installation](#-installation).
+Ready to jump into the code? Skip to [ Installation](#-installation).
 
 ---
 
-### ✨ About
+### About
 
 **Phrase Paraphraser** is an Indonesian text paraphrase engine that works through a 3-hop recursive translation pipeline:
 
@@ -290,7 +290,7 @@ Input (ID)  →  Dutch (NL)  →  English (EN)  →  Final (ID)
 
 By routing text through **two intermediate languages** before returning to Indonesian, sentence structures are drastically altered while core meaning is preserved. Ideal for plagiarism avoidance, content rewriting, or lightweight NLP experiments.
 
-### 🏗️ Architecture
+### Architecture
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -316,7 +316,7 @@ By routing text through **two intermediate languages** before returning to Indon
 └──────────────────────────────────────────────────────┘
 ```
 
-### 🧠 How It Works
+### How It Works
 
 | Stage | Process | Notes |
 |-------|---------|-------|
@@ -325,18 +325,18 @@ By routing text through **two intermediate languages** before returning to Indon
 | **3. EN → ID** | English to Indonesian | Final paraphrased output + diff highlight |
 
 **Additional features:**
-- 🔀 **Dual API Mode** — Choose Cloud (Worker proxy, free) or Local (LibreTranslate Docker, unlimited) via env var
-- 🔒 **Slang Protection** — Indonesian slang words (bro, gw, lu, wkwk, etc.) are secured as numeric tokens to prevent loss during translation
-- 🎨 **Diff Highlighting** — Changed words are highlighted using LCS (Longest Common Subsequence) algorithm
-- 📡 **Streaming Output** — Paraphrased results are displayed character by character, terminal-style
-- ❌ **Cancel Pipeline** — Cancel execution anytime by clicking "CANCEL PIPELINE"
-- 💀 **Loading Skeleton** — Shimmer placeholder while the pipeline runs
-- 📭 **Empty State** — Terminal-style placeholder when no results yet
-- ⏱️ **Cooldown System** — 10-second cooldown between requests to respect free API rate limits
-- 💾 **State Persistence** — Input and results are saved to `localStorage` so nothing is lost on refresh
-- ⌨️ **Keyboard Shortcut** — `Ctrl+Enter` to execute directly from the textarea
+- **Dual API Mode** — Choose Cloud (Worker proxy, free) or Local (LibreTranslate Docker, unlimited) via env var
+- **Slang Protection** — Indonesian slang words (bro, gw, lu, wkwk, etc.) are secured as numeric tokens to prevent loss during translation
+- **Diff Highlighting** — Changed words are highlighted using LCS (Longest Common Subsequence) algorithm
+- **Streaming Output** — Paraphrased results are displayed character by character, terminal-style
+- **Cancel Pipeline** — Cancel execution anytime by clicking "CANCEL PIPELINE"
+- **Loading Skeleton** — Shimmer placeholder while the pipeline runs
+- **Empty State** — Terminal-style placeholder when no results yet
+- **Cooldown System** — 10-second cooldown between requests to respect free API rate limits
+- **State Persistence** — Input and results are saved to `localStorage` so nothing is lost on refresh
+- **Keyboard Shortcut** — `Ctrl+Enter` to execute directly from the textarea
 
-### 🛠️ Tech Stack
+### Tech Stack
 
 | Technology | Usage |
 |------------|-------|
@@ -348,12 +348,12 @@ By routing text through **two intermediate languages** before returning to Indon
 | [Vercel](https://vercel.com) | Hosting & deployment (serverless) |
 | pnpm | Package manager |
 
-### 📦 Prerequisites
+### Prerequisites
 
 - **Node.js** `>= 20.x`
 - **pnpm** (recommended) — `npm install -g pnpm`
 
-### 🚀 Installation
+### Installation
 
 ```bash
 # 1. Clone the repository
@@ -372,9 +372,9 @@ pnpm dev
 
 Open `http://localhost:4321` in your browser.
 
-> 📖 **Full deployment guide (Cloud vs Local, Docker, VPS, Vercel):** → **[DEPLOY.md](./DEPLOY.md)**
+> **Full deployment guide (Cloud vs Local, Docker, VPS, Vercel):** → **[DEPLOY.md](./DEPLOY.md)**
 
-### ⚙️ Environment Variables
+### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -382,9 +382,9 @@ Open `http://localhost:4321` in your browser.
 | `PUBLIC_WORKER_URL` | Cloudflare Worker proxy URL | `https://phrase-proxy.kandarlubis31.workers.dev` |
 | `PUBLIC_LIBRETRANSLATE_URL` | LibreTranslate self-hosted URL | `http://localhost:5000` |
 
-> ℹ️ **Two modes available:** `on` = Cloudflare Worker (free, shared), `off` = LibreTranslate self-hosted via Docker (unlimited, local). Setup details → **[DEPLOY.md](./DEPLOY.md)**.
+> ℹ **Two modes available:** `on` = Cloudflare Worker (free, shared), `off` = LibreTranslate self-hosted via Docker (unlimited, local). Setup details → **[DEPLOY.md](./DEPLOY.md)**.
 
-### ⚠️ Free API Limits & How to Scale
+### Free API Limits & How to Scale
 
 This project uses the **MyMemory API** (free, no authentication required) via a Cloudflare Worker proxy. The cool part? It works out of the box with zero registration. But there are limits:
 
@@ -394,11 +394,11 @@ This project uses the **MyMemory API** (free, no authentication required) via a 
 | **Rate limit** | ~1 req/sec | ~5 req/sec |
 | **Registration** | Not needed | [Sign up free](https://mymemory.translated.net/doc/spec.php) |
 
-> 🔴 **The live demo at [phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** uses a shared worker + anonymous access. If it suddenly errors out during peak usage, that's the shared quota running dry. Hang tight! 😅
+> **The live demo at [phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** uses a shared worker + anonymous access. If it suddenly errors out during peak usage, that's the shared quota running dry. Hang tight!
 
-#### 🚀 Want Unlimited? Here's Your Path:
+#### Want Unlimited? Here's Your Path:
 
-**1. 🥇 Deploy Your Own Cloudflare Worker (30 minutes, FREE)**
+**1. Deploy Your Own Cloudflare Worker (30 minutes, FREE)**
 
 This is the single most impactful step! Deploy your own worker and stop sharing quotas:
 
@@ -414,7 +414,7 @@ PUBLIC_WORKER_URL=https://phrase-proxy-personal.yourname.workers.dev
 
 Done! You now have a dedicated quota + you're not affecting other users.
 
-**2. 🥈 Self-Host on a VPS (1-2 hours, $0-$5/month)**
+**2. Self-Host on a VPS (1-2 hours, $0-$5/month)**
 
 Want full control with zero limits? Deploy everything on your own server — worker + frontend:
 
@@ -426,7 +426,7 @@ Want full control with zero limits? Deploy everything on your own server — wor
 | [Hetzner VPS](https://www.hetzner.com/cloud) | ~$4/mo | Dedicated VPS, great performance |
 | [Vercel](https://vercel.com) | $0/mo (hobby) | Stay on Vercel but point to your own worker |
 
-**3. 🥉 Switch Translation Provider (advanced)**
+**3. Switch Translation Provider (advanced)**
 
 Want even more speed or quality? Swap out the translation backend in `src/utils/paraphraseEngine.ts`:
 
@@ -436,11 +436,11 @@ Want even more speed or quality? Swap out the translation backend in `src/utils/
 | [DeepL API](https://www.deepl.com/pro-api) | 500K chars/month | Best translation quality, requires credit card |
 | MyMemory (default) | ~1000-5000 words/day | No registration, simplest setup |
 
-> 💡 **Or use the built-in mode!** Set `PUBLIC_API_MODE=off` in `.env` + LibreTranslate Docker = **unlimited, no code changes.** Full guide → **[DEPLOY.md](./DEPLOY.md)**.
+> **Or use the built-in mode!** Set `PUBLIC_API_MODE=off` in `.env` + LibreTranslate Docker = **unlimited, no code changes.** Full guide → **[DEPLOY.md](./DEPLOY.md)**.
 
-> 💡 **Recommendation:** Start by deploying your own Worker (Level 1 — free, 30 minutes). Plenty for personal use even with many users. Need more? Jump to a VPS or switch providers.
+> **Recommendation:** Start by deploying your own Worker (Level 1 — free, 30 minutes). Plenty for personal use even with many users. Need more? Jump to a VPS or switch providers.
 
-### 📁 Project Structure
+### Project Structure
 
 ```
 phrase-paraphraser/
@@ -471,9 +471,9 @@ phrase-paraphraser/
 └── package.json                   # Dependencies & scripts
 ```
 
-> 💡 **Heads up for new contributors:** The codebase is modular — 1 engine utility + 4 client modules + 5 Astro components. Start with `paraphraseEngine.ts` for core logic, `paraphraseController.ts` for the UI orchestrator, then `TranslateBox.astro` which is now just 5 lines of script. Full deploy guide → **[DEPLOY.md](./DEPLOY.md)**.
+> **Heads up for new contributors:** The codebase is modular — 1 engine utility + 4 client modules + 5 Astro components. Start with `paraphraseEngine.ts` for core logic, `paraphraseController.ts` for the UI orchestrator, then `TranslateBox.astro` which is now just 5 lines of script. Full deploy guide → **[DEPLOY.md](./DEPLOY.md)**.
 
-### 📜 Scripts
+### Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -482,18 +482,18 @@ phrase-paraphraser/
 | `pnpm preview` | Preview production build |
 | `pnpm deploy` | Deploy to Vercel — requires [Vercel CLI](https://vercel.com/docs/cli) |
 
-### 🤝 Want to Contribute?
+### Want to Contribute?
 
-Everything you need is in **[CONTRIBUTING.md](./CONTRIBUTING.md)**! 🚀
+Everything you need is in **[CONTRIBUTING.md](./CONTRIBUTING.md)**!
 
-First-timer guide, issue labels, contribution workflow, PR checklist, dev workflow, code style — it's all there. Go check it out! 🔥
+First-timer guide, issue labels, contribution workflow, PR checklist, dev workflow, code style — it's all there. Go check it out!
 
-### 🗺️ Roadmap
+### Roadmap
 
-> 🔥 **Wanna help with one of these? Just go for it — or open an issue to discuss first!**
+> **Wanna help with one of these? Just go for it — or open an issue to discuss first!**
 
-- [x] **Self-hosted pipeline** — LibreTranslate via Docker, `API_MODE=off` (✅ DONE!)
-- [x] **Separate client logic** — `src/client/` modules (controller, DOM, storage, stream) (✅ DONE!)
+- [x] **Self-hosted pipeline** — LibreTranslate via Docker, `API_MODE=off` ( DONE!)
+- [x] **Separate client logic** — `src/client/` modules (controller, DOM, storage, stream) ( DONE!)
 - [ ] **Additional intermediate languages** (Japanese, Korean, French, etc.) (`help wanted`)
 - [ ] **Batch mode** — multiple texts at once, parallel output (`good first issue` — UI first!)
 - [ ] **Export results** to PDF / TXT / Markdown (`good first issue`)
@@ -502,17 +502,17 @@ First-timer guide, issue labels, contribution workflow, PR checklist, dev workfl
 - [ ] **PWA support** — offline capability + install prompt (`enhancement`)
 - [ ] **Share to Twitter/WhatsApp** — social share button (`enhancement`)
 
-### 👥 Contributors
+### Contributors
 
-Shoutout to everyone who's contributed! 🎉
+Shoutout to everyone who's contributed!
 
-> _No contributors besides the author yet? Don't be shy — be the first! And don't forget to add your name here when you open a PR! 😉_
+> _No contributors besides the author yet? Don't be shy — be the first! And don't forget to add your name here when you open a PR! _
 
 <a href="https://github.com/kandarlubis31/phrase-paraphraser/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
+ <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
 </a>
 
-### 📄 License
+### License
 
 [MIT License](./LICENSE) © 2025 [Kandar Lubis](https://github.com/kandarlubis31)
 
@@ -520,9 +520,9 @@ Shoutout to everyone who's contributed! 🎉
 
 <div align="center">
 
-### ⭐ Found this useful? Drop a star and make someone's day!
+### Found this useful? Drop a star and make someone's day!
 
-**Built with ❤️ by [Kandar Lubis](https://www.instagram.com/kandar.lubis31)**
+**Built with by [Kandar Lubis](https://www.instagram.com/kandar.lubis31)**
 
 [![Instagram](https://img.shields.io/badge/Instagram-@kandar.lubis31-%23E4405F?logo=instagram)](https://www.instagram.com/kandar.lubis31)
 [![GitHub](https://img.shields.io/badge/GitHub-kandarlubis31-%23181717?logo=github)](https://github.com/kandarlubis31)
