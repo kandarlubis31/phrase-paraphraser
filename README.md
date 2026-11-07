@@ -25,7 +25,7 @@
 
 ### Coba Langsung
 
- **[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
+**[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
 
 Langsung terjun ke kode? Loncat ke [ Instalasi](#-instalasi).
 
@@ -260,7 +260,7 @@ Terima kasih buat semua yang udah kontribusi!
 > _Belum ada contributor selain author? Jangan ragu buat jadi yang pertama! Dan jangan lupa tambahin nama kamu sendiri di sini pas bikin PR ya! _
 
 <a href="https://github.com/kandarlubis31/phrase-paraphraser/graphs/contributors">
- <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
+  <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
 </a>
 
 ### Lisensi
@@ -274,7 +274,7 @@ Terima kasih buat semua yang udah kontribusi!
 
 ### Quick Start
 
- **[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
+**[phrase-paraphraser.vercel.app](https://phrase-paraphraser.vercel.app)** — Live demo, no install needed!
 
 Ready to jump into the code? Skip to [ Installation](#-installation).
 
@@ -509,7 +509,7 @@ Shoutout to everyone who's contributed!
 > _No contributors besides the author yet? Don't be shy — be the first! And don't forget to add your name here when you open a PR! _
 
 <a href="https://github.com/kandarlubis31/phrase-paraphraser/graphs/contributors">
- <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
+  <img src="https://contrib.rocks/image?repo=kandarlubis31/phrase-paraphraser" alt="Contributors" />
 </a>
 
 ### License
